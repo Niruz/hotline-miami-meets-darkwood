@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Shader">
+      <UniqueIdentifier>{8eb0b878-cc8b-4de1-8436-f0ba9420bdb9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\Forward Shader">
+      <UniqueIdentifier>{3b1de5be-fc47-494e-830c-624a4498ad38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\Simple Shader">
+      <UniqueIdentifier>{e17614a9-5aed-4546-827e-3ab68154f71c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\STB">
+      <UniqueIdentifier>{62520238-e728-448d-a70a-1508b1921d5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\Shadow Shader">
+      <UniqueIdentifier>{315d1c5f-17aa-4993-811d-b0e7b425ac55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\Shadow Shader\Object">
+      <UniqueIdentifier>{ee8faa95-63b8-4a17-96b6-3c5a0fb000f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\Full Screen Quad Shader">
+      <UniqueIdentifier>{1d1ae467-875b-40ea-9fbd-09e4ffb1ec25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\Circle Shader">
+      <UniqueIdentifier>{97e6402b-87b5-4cd5-9fc7-9ba7581b2a62}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Build.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GLRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="GameMain.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Agent.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Math.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Tilemap.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="UtilityFunctions.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="WinMain.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="GLite.h">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Shader.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="IndexBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Shaders\fragmentVertex.glsl">
+      <Filter>Shader\Forward Shader</Filter>
+    </None>
+    <None Include="Shaders\forwardVertex.glsl">
+      <Filter>Shader\Forward Shader</Filter>
+    </None>
+    <None Include="Shaders\simpleVertex.glsl">
+      <Filter>Shader\Simple Shader</Filter>
+    </None>
+    <None Include="Shaders\simpleFragment.glsl">
+      <Filter>Shader\Simple Shader</Filter>
+    </None>
+    <None Include="stb_truetype.h">
+      <Filter>Header Files\STB</Filter>
+    </None>
+    <None Include="Font.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Texture.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="stb_image.h">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="DirectSound.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Input.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Window.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="AssetLoader.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Shadow.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Shaders\quadvertex.glsl">
+      <Filter>Shader\Full Screen Quad Shader</Filter>
+    </None>
+    <None Include="Shaders\quadfragment.glsl">
+      <Filter>Shader\Full Screen Quad Shader</Filter>
+    </None>
+    <None Include="Shaders\shadowvertex.glsl">
+      <Filter>Shader\Shadow Shader\Object</Filter>
+    </None>
+    <None Include="Shaders\shadowfragment.glsl">
+      <Filter>Shader\Shadow Shader\Object</Filter>
+    </None>
+    <None Include="Shaders\circleFragment.glsl">
+      <Filter>Shader\Circle Shader</Filter>
+    </None>
+    <None Include="Shaders\circleVertex.glsl">
+      <Filter>Shader\Circle Shader</Filter>
+    </None>
+    <None Include="Level.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="PathStack.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="wglext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
