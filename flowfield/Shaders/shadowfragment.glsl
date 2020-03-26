@@ -14,8 +14,8 @@ in DATA
 } fs_in;
 
 uniform vec2 lightPos;
-uniform vec2 shit;
-uniform vec2 shit2;
+uniform vec2 pos;
+uniform vec2 pos2;
 uniform vec3 color1;
 uniform vec3 color2;
 
@@ -28,7 +28,7 @@ uniform float lightZPosition; //not technically a light radius, its the z value 
 
 
 uniform usampler2D stencilTexturino;
-uniform int shouldLightBeRestrictedrino;
+uniform int shouldLightBeRestricted;
 
 vec3 DirectIllumination(vec3 P, vec3 N, vec3 lightCentre, float lightRadius, vec3 lightColour, float cutoff)
 {
@@ -43,9 +43,6 @@ vec3 DirectIllumination(vec3 P, vec3 N, vec3 lightCentre, float lightRadius, vec
 	float denom = d / r + 1;
 	float attenuation = 1 / (denom*denom);
 
-	// scale and bias attenuation such that:
-	//   attenuation == 0 at extent of max influence
-	//   attenuation == 1 when d == 0
 	attenuation = (attenuation - cutoff) / (1 - cutoff);
 	attenuation = max(attenuation, 0);
 
@@ -55,54 +52,11 @@ vec3 DirectIllumination(vec3 P, vec3 N, vec3 lightCentre, float lightRadius, vec
 
 void main()
 {
-/*	float intensity = 50.0f / length(fs_in.pos.xy - shit);
 
-	float constant = 0.2f;
-	float linear = 0.0009f;
-	float quadratic = 0.0032f;
-
-	float distance = length(fs_in.pos.xy - shit);
-
-	float attenuation = 1.0 / (constant + linear * distance +
-		quadratic * (distance * distance));
-
-
-	float radius = 200.0f;
-	float att = clamp(1.0 - distance * distance / (radius*radius), 0.0, 1.0); 
-	att *= att;
-
-
-	//attenuation
-	float radiuser = 10000.0f;
-	float test = max(0, 1 - (distance / radiuser));
-	test *= test;*/
-
-				 //DirectIllumination(vec3 P, vec3 N, vec3 lightCentre, float lightRadius, vec3 lightColour, float cutoff)
-	//vec3 colorTest = DirectIllumination(vec3(gl_FragCoord.xy, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(shit.xy, 30.0f), 200.0f, vec3(0.0f, 1.0f, 0.0f), 0.05f);
-	//vec3 colorTest = DirectIllumination(vec3(fs_in.pos.xy, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(shit.xy, 30.0f), 200.0f, vec3(0.0f, 1.0f, 0.0f), 0.05f);
-	//vec3 colorTest = DirectIllumination(vec3(fs_in.pos.xy, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(shit.xy, 30.0f), 200.0f, color1, 0.05f);
-	//vec3 colorTest2 = DirectIllumination(vec3(fs_in.pos.xy, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(shit2.xy, 30.0f), 200.0f, color2, 0.05f);
-
-	//color *= attenuation;
-
-	//vec4 texColor = fs_in.col;
-	//color = texColor * intensity;
-	//color = texColor * attenuation;
-	//color = vec4(colorTest + colorTest2, 1.0f);
-	/*if (currentActiveOutput == 0)
-		colorOut0 = vec4(colorTest, 0.5f);
-	if (currentActiveOutput == 1)
-		colorOut1 = vec4(colorTest, 0.5f);*/
-
-
-
-
-
-	//vec3 colorTest = DirectIllumination(vec3(fs_in.pos.xy, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(shit.xy, 30.0f), 200.0f, color1, 0.05f);
 	uint stencil1 = texelFetch(stencilTexturino, ivec2(gl_FragCoord.xy), 0).r;
 	//uint stencil1 = texture(stencilTexturino, UV).r;
-	vec3 colorTest = DirectIllumination(vec3(fs_in.pos.xy, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(shit.xy, lightZPosition), 200.0f, color1, 0.05f);
-	if (shouldLightBeRestrictedrino == 1)
+	vec3 colorTest = DirectIllumination(vec3(fs_in.pos.xy, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(pos.xy, lightZPosition), 200.0f, color1, 0.05f);
+	if (shouldLightBeRestricted == 1)
 	{
 		colorTest = colorTest * stencil1;
 	}
@@ -111,17 +65,4 @@ void main()
 	stencil = 1;
 
 
-
-
-
-	//color = texColor * test;
-	//color = texColor * att;
-	//color = vec4(1.0f, 0.0f, 0.0f, 0.6f) * intensity;
-	/*if (lightPos.x > 0)
-		color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-	else if (lightPos.x == 0)
-		color = vec4(0.0f, 0.0f, 1.0f, 1.0f);
-	else 
-		color = vec4(0.0f, 1.0f, 0.0f, 1.0f);*/
-	//color = vec4(lightPos.x, 0.0f, 0.0f, 1.0f);
 }

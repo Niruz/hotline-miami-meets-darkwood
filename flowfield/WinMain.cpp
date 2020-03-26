@@ -242,7 +242,7 @@ window_callback(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 		//mouseState.currentLeftMouseState = true;
 		mouseState.x = (float)p.x;
 		mouseState.y = (float)height - p.y;
-		int shit = 5;
+
 	}
 	break;
 	
@@ -279,7 +279,6 @@ window_callback(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_MOUSEHWHEEL:
 	{
 
-		int shit = 5;
 	}
 	break;
 
@@ -295,7 +294,7 @@ window_callback(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 
 		//int xPos = GET_X_LPARAM(lparam);
 		//int yPos = GET_Y_LPARAM(lparam);
-		int shit = 5;
+
 	}
 	break;
 

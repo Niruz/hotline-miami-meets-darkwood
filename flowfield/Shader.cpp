@@ -75,7 +75,6 @@ static inline void setUniform2fv(Shader* shader, const char* inName, const vec2<
 }
 static inline void setUniform2f(Shader* shader, const char* inName, const vec2<float>& vec)
 {
-	int shit = GetUniformLocation(shader, inName);
 	glUniform2f(GetUniformLocation(shader, inName), vec.x, vec.y);
 }
 static inline void setUniform1i(Shader* shader, const char* inName, const int value)

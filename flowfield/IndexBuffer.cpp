@@ -18,7 +18,7 @@ Initialize(IndexBuffer* indexBuffer, GLuint *data, GLsizei count)
 }
 
 static void
-DeInitialize(IndexBuffer* indexBuffer, int shit)
+DeInitialize(IndexBuffer* indexBuffer, int bp)
 {
 	glDeleteBuffers(1, &indexBuffer->bufferID);
 }

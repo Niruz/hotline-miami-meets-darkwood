@@ -424,7 +424,7 @@ InitializeRendererData(const mat4x4& projectionMatrix, float width, float height
 	setUniformMatrix4fv(&shaders[SHADOW_SHADER], "projectionMatrix", 1, GL_FALSE, projectionMatrix);
 	setUniform1f(&shaders[SHADOW_SHADER], "lightZPosition", 30.0f);
 	setUniform1i(&shaders[SHADOW_SHADER], "stencilTexturino", 4);
-	setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestrictedrino", 0);
+	setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestricted", 0);
 	Unbind(&shaders[SHADOW_SHADER]);
 
 	Bind(&shaders[CIRCLE_SHADER]);
@@ -1219,7 +1219,6 @@ DrawString(const std::string& text, const vec4<float>& position, const Font& fon
 		++charText;
 	}
 
-	int shit = 5;
 
 }
 

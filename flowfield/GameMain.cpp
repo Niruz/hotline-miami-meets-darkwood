@@ -39,11 +39,6 @@ GameMain(Window window)
 	InitializeShadowEdges((float)window.width, (float)window.height);
 
 
-
-
-	//vec2<float> lightPosition = V2(224.0f, -224.0f);
-	//Shadow* shadow1 = CreateShadow(V2(224.0f, -224.0f), V3(1.0f, 0.0f, 0.0f));
-	//Shadow* shadow2 = CreateShadow(V2(448.0f, -448.0f), V3(1.0f, 0.0f, 0.0f));
 	Shadow* shadow = CreateShadow(V2(0.0f, 0.0f), V3(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 		                                             static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 		                                             static_cast <float> (rand()) / static_cast <float> (RAND_MAX)),
@@ -57,10 +52,6 @@ GameMain(Window window)
 	{
 		SetBit(&world[1 * tilemap.width + x].edge_exist_cell_exist, CELL_EXIST);
 		SetBit(&world[(tilemap.height - 2) * tilemap.width + x].edge_exist_cell_exist, CELL_EXIST);
-		//SetBit(&world[1 * 20 + x].edge_exist_cell_exist, CELL_EXIST);
-		//SetBit(&world[(20 - 2) * 20 + x].edge_exist_cell_exist, CELL_EXIST);
-		//world[1 * 20 + x].exist = true; //width
-		//world[(20 - 2) * 20 + x].exist = true; //height
 	}
 
 	//height
@@ -68,10 +59,6 @@ GameMain(Window window)
 	{
 		SetBit(&world[x * tilemap.width + 1].edge_exist_cell_exist, CELL_EXIST);
 		SetBit(&world[x * tilemap.width + (tilemap.width - 2)].edge_exist_cell_exist, CELL_EXIST);
-		//SetBit(&world[x * 20 + 1].edge_exist_cell_exist, CELL_EXIST);
-		//SetBit(&world[x * 20 + (20 - 2)].edge_exist_cell_exist, CELL_EXIST);
-		//world[x * 20 + 1].exist = true;
-		//world[x * 20 + (20 - 2)].exist = true;
 	}
 
 	//world[37].exist = true;
@@ -133,10 +120,9 @@ GameMain(Window window)
 			//vec2<float> cursorPos = V2(mouseState.x, mouseState.y) - (Game::windowSize * V2(0.5f, 0.5f)); //this is the actual cursor pos;
 			SetTileBit(&tilemap, cursorPos);
 			SetCell(&tilemap, world, cursorPos);
-			//pitch == world width
-			//ConvertTileMapToPolyMap(0, 0, 20, 20, blockWidth, 20);
+
 			ConvertTileMapToPolyMap(0, 0, tilemap.width, tilemap.height, blockWidth, tilemap.width, player);
-			//CalculateVisibilityPolgyon(camera.x, camera.y, 1000.0f);
+
 			CalculateVisibilityPolgyons(1000.0f);
 		} 
 		if (MouseReleased(RIGHT))
@@ -159,9 +145,6 @@ GameMain(Window window)
 		UpdateShadowFrustum(player);
 		CalculateVisibilityPolgyons(shadow, 200.0f);
 		
-		//CalculateVisibilityPolgyon(lightPosition.x, -lightPosition.y, 1000.0f);
-		
-		//CalculateVisibilityPolgyon(camera.x, camera.y, 1000.0f);
 
 
 
@@ -190,12 +173,6 @@ GameMain(Window window)
 
 
 
-
-
-
-
-
-
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[OFF_SCREEN_COLOR_BUFFER].fbo);
 		glViewport(0, 0, window.width, window.height);
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -207,19 +184,12 @@ GameMain(Window window)
 		// Do OpenGL rendering here
 
 
-		//glDisable(GL_CULL_FACE);
-		//glCullFace(GL_BACK);
-		//glEnable(GL_CULL_FACE); //remove these, keep them for finding errors
-		//glCullFace(GL_BACK);
 
 
 		Bind(&shaders[FORWARD_SHADER]);
 		Begin(&renderers[COLOR_RENDERER]);
 
-		//Tilemap
-		/*PushTransform(&Game::renderer, camera, -5.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
-		DrawTilemap(&Game::renderer, &tilemap, V2(32.0f, 32.0f), -1);
-		PopTransform(&Game::renderer);*/
+
 
 		//Cellmap
 		PushTransform(camera, -5.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
@@ -246,67 +216,24 @@ GameMain(Window window)
 		vec2<float> right = RotateVec(direction, -90.0);
 		left = Normalize(left);
 		right = Normalize(right);
-		//left.y = left.y * -1.0f;
-		//left = left * 50.0f;
-		//shadow->position = cursorPos - V2(-16.0f, 16.0f);// , cursorPos + V2(16.0f, -16.0f);
-		//This is due to where "shadow" space is calculated, we either do this or render triangles at an offset (everything else is rendered by midpoints)
+
 		shadow->position = player -V2(-16.0f, 16.0f);
 		shadow->direction = Normalize(cursor - shadow->position);
 		shadow->direction = direction;
 		
-	/*	PushTransform(camera, 0.1f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
-		DrawLine(player, cursor, GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), 2.5f);
-		DrawLine(player, player + (left * 100.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), 2.5f);
-		DrawQuad(player + (left * 200.0f), V2(32.0f, 32.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
-		DrawLine(player, player + (right * 100.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), 2.5f);
-		DrawQuad(player + (right * 200.0f), V2(32.0f, 32.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
-	//	DrawLine(player, player + (right * 100000.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), 2.5f);
-		PopTransform();*/
+
 
 		//player
 		PushTransform(camera, -4.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
 		DrawQuad(player, V2(32.0f, 32.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
 		PopTransform();
 
-	//	vec2<float> cursorPos = (V2(mouseState.x, mouseState.y) - (Game::windowSize * V2(0.5f, 0.5f))) + player;
-
-
-		/*//visibility polygon
-		PushTransform(&Game::renderer, camera, -2.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
-		if (visibilityPolygonPoints.size() > 0) 
-		{
-			for (int i = 0; i < visibilityPolygonPoints.size() - 1; i++)
-			{
-				//note padding here again...
-				DrawTriangle(&Game::renderer, V2(cursorPos.x - 16.0f, cursorPos.y + 16.0f), V2(visibilityPolygonPoints[i].y - 16.0f, -visibilityPolygonPoints[i].z + 16.0f), V2(visibilityPolygonPoints[i + 1].y - 16.0f, -visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
-				//DrawLine(&Game::renderer, cursorPos, V2(visibilityPolygonPoints[i].y - 16.0f, -visibilityPolygonPoints[i].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
-				//DrawLine(&Game::renderer, cursorPos, V2(visibilityPolygonPoints[i + 1].y - 16.0f, -visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
-			}
-		}
-		DrawTriangle(&Game::renderer, V2(cursorPos.x - 16.0f, cursorPos.y + 16.0f), V2(visibilityPolygonPoints[visibilityPolygonPoints.size() - 1].y - 16.0f, -visibilityPolygonPoints[visibilityPolygonPoints.size() - 1].z + 16.0f), V2(visibilityPolygonPoints[0].y - 16.0f, -visibilityPolygonPoints[0].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
-		//DrawTriangle(&Game::renderer, cursorPos, V2(32.0f, 32.0f), GetColor(1.0f, 0.0f, 1.0f, 1.0f));
-		PopTransform(&Game::renderer);*/
-
-		//Line
-		/*PushTransform(camera, 1.01f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
-		DrawLine(V2(32.0f * 5, 32.0f * -10), player, GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), 5.0f);
-		PopTransform();*/
-
-
-		/*PushTransform(&Game::renderer, V2(0.0f, 0.0f), -60.0f, V2(CosRadians(DegreesToRadians(10)), SinRadians(DegreesToRadians(10))));
-		Submit(&Game::renderer, V2(0.0f, 0.0f), V2(320.0f, 410.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), textures[TEST1].ID, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
-		PopTransform(&Game::renderer);
-
-		glDisable(GL_CULL_FACE);
-		PushTransform(&Game::renderer, V2(0.0f, 0.0f), -1.0f, V2(CosRadians(DegreesToRadians(180)), SinRadians(DegreesToRadians(180))));
-		DrawString(&Game::renderer, "Adventurer\ntest", V4(0.0f, 0.0f, 0.0f, 1.0f), *GetFont(ADVENTURER_128), GetColor(0.0f, 1.0f, 0.0f, 1.0f));
-		PopTransform(&Game::renderer);*/
 
 		End();
 		Flush();
 		Unbind(&shaders[FORWARD_SHADER]);
 
-		//glFlush();
+
 
 
 
@@ -320,29 +247,14 @@ GameMain(Window window)
 		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-		
-
-		//vec2<float> cursorPos2 = V2(mouseState.x, mouseState.y) - (Game::windowSize * V2(0.5f, 0.5f)); //this is the actual cursor pos;
-	//	vec2<float> lightPos = V2((float)(mouseState.x * 16.0f / 1280.0f), (float)(9.0f - mouseState.y * 9.0f /720.0f));
 		GLenum err2;
 		while ((err2 = glGetError()) != GL_NO_ERROR)
 		{
 			std::cout << "before:" << err2 << std::endl;
 		}
 
-		//setUniform2f(&shaders[SHADOW_SHADER], "shit", V2(mouseState.x, mouseState.y));
-
-		
-		//NOTE: since im a retard, cameraPos is used here since everything else is in world space, but the pushtransform puts it into camera space ...
-		//vec2<float> lightCameraPosition = lightPosition - player;
-		//vec2<float> lightCameraPosition1 = shadow1->position - player;
-		//vec2<float> lightCameraPosition2 = shadow2->position - player;
-		//vec2<float> lightCameraPos[2] = { lightCameraPosition1 , lightCameraPosition2 };
 		vec3<float> lightColors[2] = { V3(1.0f, 0.0f, 0.0f), V3(0.0f, 0.0f, 1.0f) };
-		/*setUniform2f(&shaders[SHADOW_SHADER], "shit", lightCameraPosition1);
-		setUniform2f(&shaders[SHADOW_SHADER], "shit2", lightCameraPosition2);
-		setUniform3f(&shaders[SHADOW_SHADER], "color1", V3(1.0f, 0.0f, 0.0f));
-		setUniform3f(&shaders[SHADOW_SHADER], "color2", V3(0.0f, 0.0f, 1.0f));*/
+
 
 		while ((err2 = glGetError()) != GL_NO_ERROR)
 		{
@@ -354,12 +266,7 @@ GameMain(Window window)
 		{
 			for (int i = 0; i < shadow->visibilityPolygonPoints.size() - 1; i++)
 			{
-				//note padding here again...
-				//DrawTriangle(V2(shadow->position.x - 16.0f, shadow->position.y + 16.0f), V2(shadow->visibilityPolygonPoints[i].y - 16.0f, -shadow->visibilityPolygonPoints[i].z + 16.0f), V2(shadow->visibilityPolygonPoints[i + 1].y - 16.0f, -shadow->visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
-				//DrawTriangle(V2(cursorPos.x - 16.0f, cursorPos.y + 16.0f), V2(visibilityPolygonPoints[i].y - 16.0f, -visibilityPolygonPoints[i].z + 16.0f), V2(visibilityPolygonPoints[i + 1].y - 16.0f, -visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
 
-				//DrawLine(shadow->position, V2(shadow->visibilityPolygonPoints[i].y - 16.0f, -shadow->visibilityPolygonPoints[i].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
-				//DrawLine(shadow->position, V2(shadow->visibilityPolygonPoints[i + 1].y - 16.0f, -shadow->visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
 				DrawLine(V2(shadow->position.x - 16.0f, shadow->position.y + 16.0f), V2(shadow->visibilityPolygonPoints[i].y - 16.0f, -shadow->visibilityPolygonPoints[i].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
 				DrawLine(V2(shadow->position.x - 16.0f, shadow->position.y + 16.0f), V2(shadow->visibilityPolygonPoints[i + 1].y - 16.0f, -shadow->visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
 			}
@@ -367,11 +274,6 @@ GameMain(Window window)
 		//DrawTriangle(V2(shadow->position.x - 16.0f, shadow->position.y + 16.0f), V2(shadow->visibilityPolygonPoints[shadow->visibilityPolygonPoints.size() - 1].y - 16.0f, -shadow->visibilityPolygonPoints[shadow->visibilityPolygonPoints.size() - 1].z + 16.0f), V2(shadow->visibilityPolygonPoints[0].y - 16.0f, -shadow->visibilityPolygonPoints[0].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
 		PopTransform();
 
-
-		/*setUniform2f(&shaders[SHADOW_SHADER], "shit", lightCameraPosition1);
-		setUniform2f(&shaders[SHADOW_SHADER], "shit2", lightCameraPosition2);
-		setUniform3f(&shaders[SHADOW_SHADER], "color1", V3(1.0f, 0.0f, 0.0f));
-		setUniform3f(&shaders[SHADOW_SHADER], "color2", V3(0.0f, 0.0f, 1.0f));*/
 
 		GLenum er3r;
 		while ((er3r = glGetError()) != GL_NO_ERROR)
@@ -392,13 +294,8 @@ GameMain(Window window)
 			Bind(&shaders[SHADOW_SHADER]);
 			Begin(&renderers[SHADOW_RENDERER]);
 
-			//mouse
-			/*PushTransform(camera, -3.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
-			//DrawTriangle(cursorPos - V2(16.0f, 16.0f), cursorPos + V2(16.0f, -16.0f), cursorPos + V2(0.0f, 16.0f), GetColor(1.0f, 0.0f, 0.0f, 1.0f));
-			DrawCircle(cursorPos, 200.0f, GetColor(1.0f, 0.0f, 0.0f, 1.0f), 24);
-			PopTransform();*/
 
-			setUniform2f(&shaders[SHADOW_SHADER], "shit", shadows.shadows[k].position + V2(-16.0f, 16.0f) - player);
+			setUniform2f(&shaders[SHADOW_SHADER], "pos", shadows.shadows[k].position + V2(-16.0f, 16.0f) - player);
 			setUniform3f(&shaders[SHADOW_SHADER], "color1", shadows.shadows[k].color);
 			setUniform1i(&shaders[SHADOW_SHADER], "currentActiveOutput", 0);
 			setUniform1f(&shaders[SHADOW_SHADER], "lightZPosition", shadows.shadows[k].shadowZPos);
@@ -406,26 +303,22 @@ GameMain(Window window)
 
 			if (shadows.shadows[k].type == Shadow::POINT) 
 			{
-				setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestrictedrino", 1);
+				setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestricted", 0);
 				PushTransform(camera, depthOffset, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
 				depthOffset += 0.1f;
 				if (shadows.shadows[k].visibilityPolygonPoints.size() > 0)
 				{
 					for (int i = 0; i < shadows.shadows[k].visibilityPolygonPoints.size() - 1; i++)
 					{
-						//note padding here again...
-						//this one was correct before DrawTriangle(V2(shadows.shadows[k].position.x - 16.0f, shadows.shadows[k].position.y + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[i].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i].z + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[i + 1].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
+
 						DrawTriangle(V2(shadows.shadows[k].position.x - 16.0f, shadows.shadows[k].position.y + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[i].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i].z + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[i + 1].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
-						//DrawTriangle(V2(shadows.shadows[k].position.x, shadows.shadows[k].position.y), V2(shadows.shadows[k].visibilityPolygonPoints[i].y, -shadows.shadows[k].visibilityPolygonPoints[i].z), V2(shadows.shadows[k].visibilityPolygonPoints[i + 1].y, -shadows.shadows[k].visibilityPolygonPoints[i + 1].z), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
-						//DrawTriangle(V2(cursorPos.x - 16.0f, cursorPos.y + 16.0f), V2(visibilityPolygonPoints[i].y - 16.0f, -visibilityPolygonPoints[i].z + 16.0f), V2(visibilityPolygonPoints[i + 1].y - 16.0f, -visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
+						
 					}
 				}
-				//if (shadows.shadows[k].visibilityPolygonPoints.size() > 0 && shadows.shadows[k].visibilityPolygonPoints.size() % 2 == 0)
-				//this is jsut to complete the "light circle"
+
 
 				DrawTriangle(V2(shadows.shadows[k].position.x - 16.0f, shadows.shadows[k].position.y + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[shadows.shadows[k].visibilityPolygonPoints.size() - 1].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[shadows.shadows[k].visibilityPolygonPoints.size() - 1].z + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[0].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[0].z + 16.0f), GetColor(0.5f, 1.0f, 0.5f, 1.0f));
-				//DrawTriangle(V2(shadows.shadows[k].position.x, shadows.shadows[k].position.y ), V2(shadows.shadows[k].visibilityPolygonPoints[shadows.shadows[k].visibilityPolygonPoints.size() - 1].y , -shadows.shadows[k].visibilityPolygonPoints[shadows.shadows[k].visibilityPolygonPoints.size() - 1].z ), V2(shadows.shadows[k].visibilityPolygonPoints[0].y , -shadows.shadows[k].visibilityPolygonPoints[0].z), GetColor(0.5f, 1.0f, 0.5f, 1.0f));
-				//this one was correct.. DrawTriangle(V2(shadows.shadows[k].position.x - 16.0f, shadows.shadows[k].position.y + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[shadows.shadows[k].visibilityPolygonPoints.size() - 1].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[shadows.shadows[k].visibilityPolygonPoints.size() - 1].z + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[0].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[0].z + 16.0f), GetColor(0.5f, 1.0f, 0.5f, 1.0f));
+			
 				PopTransform();
 			} 
 			else if (shadows.shadows[k].type == Shadow::CONE) 
@@ -435,52 +328,16 @@ GameMain(Window window)
 
 				setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestrictedrino", 0);
 
-				/*if(!shadows.shadows[k].reversingNeeded) 
-				{
-					PushTransform(camera, depthOffset, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
-					depthOffset += 0.1f;
-					if (shadows.shadows[k].visibilityPolygonPoints.size() > 0)
-					{
-						for (int i = shadows.shadows[k].visibilityPolygonPoints.size() - 1; i > 0; i--)
-						{
-							//note padding here again...
-							DrawTriangle(V2(shadows.shadows[k].position.x, shadows.shadows[k].position.y), V2(shadows.shadows[k].visibilityPolygonPoints[i].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i].z + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[i - 1].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i - 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
-						}
-					}
-					PopTransform();
-				}*/
-				//else 
-				//{
+
 				if (shadows.shadows[k].reversingNeeded && shadows.shadows[k].index != -1)
 				{
-					//This case is needed if we have some angles above and below 360 degrees
-					/*std::vector<vec3<float>> aboveThreshold;
 
-					for (unsigned int i = shadow->index; i < shadow->visibilityPolygonPoints.size(); i++)
-					{
-						aboveThreshold.push_back(shadow->visibilityPolygonPoints[i]);
-					}
-
-					for (unsigned int i = 0; i < shadow->index; i++)
-					{
-						aboveThreshold.push_back(shadow->visibilityPolygonPoints[i]);
-					}
-					int bp = 10;
-
-					shadow->visibilityPolygonPoints.clear();
-					for (unsigned int i = 0; i < aboveThreshold.size(); i++)
-					{
-						shadow->visibilityPolygonPoints.push_back(aboveThreshold[i]);
-					}*/
 
 					PushTransform(camera, depthOffset, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
 					depthOffset += 0.1f;
 					if (shadows.shadows[k].visibilityPolygonPoints.size() > 0)
 					{
-						/*for (int i = 0; i < shadows.shadows[k].visibilityPolygonPoints.size() - 1; i++)
-						{
-							DrawTriangle(V2(shadows.shadows[k].position.x, shadows.shadows[k].position.y), V2(shadows.shadows[k].visibilityPolygonPoints[i].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i].z + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[i + 1].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));	
-						}*/
+
 						for (int i = 0; i < shadows.shadows[k].index - 1; i++)
 						{
 							DrawTriangle(V2(shadows.shadows[k].position.x - 16.0f, shadows.shadows[k].position.y + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[i].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i].z + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[i + 1].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
@@ -502,17 +359,12 @@ GameMain(Window window)
 					{
 						for (int i = 0; i < shadows.shadows[k].visibilityPolygonPoints.size() - 1; i++)
 						{
-							//note padding here again...
-							//this one was correct before DrawTriangle(V2(shadows.shadows[k].position.x - 16.0f, shadows.shadows[k].position.y + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[i].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i].z + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[i + 1].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
+							
 							DrawTriangle(V2(shadows.shadows[k].position.x - 16.0f , shadows.shadows[k].position.y + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[i].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i].z + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[i + 1].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
-							//DrawTriangle(V2(shadows.shadows[k].position.x, shadows.shadows[k].position.y), V2(shadows.shadows[k].visibilityPolygonPoints[i].y, -shadows.shadows[k].visibilityPolygonPoints[i].z), V2(shadows.shadows[k].visibilityPolygonPoints[i + 1].y, -shadows.shadows[k].visibilityPolygonPoints[i + 1].z), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
-							//DrawTriangle(V2(cursorPos.x - 16.0f, cursorPos.y + 16.0f), V2(visibilityPolygonPoints[i].y - 16.0f, -visibilityPolygonPoints[i].z + 16.0f), V2(visibilityPolygonPoints[i + 1].y - 16.0f, -visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
+	
 						}
 					}
-					//if (shadows.shadows[k].visibilityPolygonPoints.size() > 0 && shadows.shadows[k].visibilityPolygonPoints.size() % 2 == 0)
-					//	DrawTriangle(V2(shadows.shadows[k].position.x - 16.0f, shadows.shadows[k].position.y + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[shadows.shadows[k].visibilityPolygonPoints.size() - 1].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[shadows.shadows[k].visibilityPolygonPoints.size() - 1].z + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[0].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[0].z + 16.0f), GetColor(0.5f, 1.0f, 0.5f, 1.0f));
-					//DrawTriangle(V2(shadows.shadows[k].position.x, shadows.shadows[k].position.y ), V2(shadows.shadows[k].visibilityPolygonPoints[shadows.shadows[k].visibilityPolygonPoints.size() - 1].y , -shadows.shadows[k].visibilityPolygonPoints[shadows.shadows[k].visibilityPolygonPoints.size() - 1].z ), V2(shadows.shadows[k].visibilityPolygonPoints[0].y , -shadows.shadows[k].visibilityPolygonPoints[0].z), GetColor(0.5f, 1.0f, 0.5f, 1.0f));
-					//this one was correct.. DrawTriangle(V2(shadows.shadows[k].position.x - 16.0f, shadows.shadows[k].position.y + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[shadows.shadows[k].visibilityPolygonPoints.size() - 1].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[shadows.shadows[k].visibilityPolygonPoints.size() - 1].z + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[0].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[0].z + 16.0f), GetColor(0.5f, 1.0f, 0.5f, 1.0f));
+
 					PopTransform();
 					//}
 				}
@@ -530,7 +382,7 @@ GameMain(Window window)
 			{
 				
 
-				setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestrictedrino", 0);
+				setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestricted", 0);
 			}
 			Unbind(&shaders[SHADOW_SHADER]);
 		}
@@ -566,7 +418,7 @@ GameMain(Window window)
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_CIRCLE_BUFFER].stencilTextureID);
 
-		setUniform1i(&shaders[QUAD_SHADER], "shouldLightBeRestricted", 1);
+		setUniform1i(&shaders[QUAD_SHADER], "shouldLightBeRestricted", 0);
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -1074,15 +926,7 @@ GameMain(Window window)
 		__int32 FPS = PerfCountFrequency / CounterElapsed;
 
 		std::cout << "FPS: "<< FPS << std::endl;
-		/*
-		1 / counts / frame  = frames / count
-			then multiply that by counts / secocond
 
-			counts / second is the frequency
-			frames per count = 1
-			frames / count * counts / second == frames / second
-			frequency / counter
-			*/
 
 		LastCounter = EndCounter;
 	}
@@ -1092,39 +936,3 @@ GameMain(Window window)
 }
 
 #endif
-
-/*
-int main() {
-
-	Tilemap tilemap = GenerateTestTilemap();
-
-	Agent agent;
-	InitializeAgent(&agent, VEC(0.0f, 0.0f), VEC(0.0f, 0.0f));
-
-	int counter = 0;
-	bool firstTime = true;
-	for (int i = 0; i < tilemap.width * tilemap.height; i++) {
-
-		counter++;
-		if (firstTime)
-		{
-			counter = 0;
-			firstTime = false;
-		}
-		if (counter == tilemap.width) {
-			std::cout << '\n';
-			counter = 0;
-		}
-
-		std::cout << TestBit(tilemap.tilemap, i);
-	}
-
-	std::cout << std::endl;
-	std::cout << std::endl;
-
-	//GenerateDjikstra(VEC(4,4), &tilemap);
-	GenerateDjikstra(VEC(18, 1), &tilemap);
-
-	return 0;
-}
-*/
