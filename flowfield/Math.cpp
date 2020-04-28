@@ -501,3 +501,19 @@ Square(float value)
 
 	return square;
 }
+
+
+float
+SQRT(float num)
+{
+	float guess, e, upperbound;
+	guess = 1;
+	e = 0.001f;
+	do
+	{
+		upperbound = num / guess;
+		guess = (upperbound + guess) / 2;
+	} while (!(guess * guess >= num - e &&
+		guess * guess <= num + e));
+	return guess;
+}

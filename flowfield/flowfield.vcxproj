@@ -122,6 +122,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="Pathfinding.cpp" />
     <None Include="PathStack.cpp" />
     <None Include="Level.cpp" />
     <None Include="Shaders\circleFragment.glsl" />
@@ -145,6 +146,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </None>
     <None Include="AssetLoader.cpp" />
+    <None Include="BinaryHeap.cpp" />
     <ClCompile Include="Build.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>

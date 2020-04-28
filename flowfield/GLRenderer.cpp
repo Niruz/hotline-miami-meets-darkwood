@@ -1256,7 +1256,7 @@ DrawTilemap(Tilemap* tilemap, vec2<float> tileSize, int textureId)
 }
 
 static void
-DrawCells(Tilemap* tilemap, Cell* cells, vec2<float> tileSize, int textureId)
+DrawCells(Tilemap* tilemap, TileCell* cells, vec2<float> tileSize, int textureId)
 {
 	float startX = 0.0f;
 	float startY = 0.0f;

@@ -137,6 +137,12 @@
     <None Include="PathStack.cpp">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="Pathfinding.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="BinaryHeap.cpp">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="wglext.h">

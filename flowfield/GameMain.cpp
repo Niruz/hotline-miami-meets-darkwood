@@ -18,7 +18,7 @@ GameResize(float newWidth, float newHeight)
 }
 
 
-#define SHADOWS true
+#define SHADOWS false
 #define DJIKSTRA false
 #if SHADOWS
 static int
@@ -693,8 +693,9 @@ GameMain(Window window)
 	Tilemap tilemap = GenerateTestTilemap();
 
 	Ai ai;
-	InitializeAi(&ai, V2(4, 4), V2(10, 10));
-	SetStateRoaming(&ai);
+	//InitializeAi(&ai, V2(4, 4), V2(10, 10));
+	InitializeAi(&ai, 4, V2(4, 4), V2(4, 8), V2(10, 8), V2(10, 4));
+	//SetStateRoaming(&ai);
 
 	//This is the LOS path..
 	PathStack pathStack;
@@ -759,6 +760,16 @@ GameMain(Window window)
 		}
 		if (MouseReleased(RIGHT))
 		{
+			ai.inspectionGoal = WorldToTileCoordinates(&tilemap, cursorPos);
+			ai.state = Ai::State::INSPECT;
+			vec2<int> aiTile = WorldToTileCoordinates(&tilemap, ai.position);
+			vec2<int> playerTile = WorldToTileCoordinates(&tilemap, player);
+			AStarSearch(tilemap.tilemap, &aiTile, &playerTile, (int)tilemap.width, (int)tilemap.height, &ai.pathstack);
+			ai.currentGoal = PopStack(&ai.pathstack); // i think we cna double pop it here
+			ai.currentGoal = PopStack(&ai.pathstack);
+
+			vec2<float> goalFloat = V2(ai.currentGoal.x * 32.0f, ai.currentGoal.y * -32.0f); //y is reversed in directx
+			ai.direction = Normalize(goalFloat - ai.position);
 			std::cout << "mouse right released" << std::endl;
 		}
 		if (ScroolWheelUp())
@@ -783,7 +794,17 @@ GameMain(Window window)
 			ai.position += ai.direction * 0.05f;
 			if (lengthToGoal < 1.0f)
 			{
-				if (ai.currentGoal == ai.patrolFrom)
+				ai.position = goalPosition;
+				ai.nextPatrolIndex++;
+				ai.nextPatrolIndex = ai.nextPatrolIndex % ai.patrolStack.capacity;
+
+				vec2<int> newGoal = ai.patrolStack.arr[ai.nextPatrolIndex];
+
+				ai.currentGoal = ai.patrolStack.arr[ai.nextPatrolIndex];
+				ai.direction = Normalize(V2(newGoal.x * 32.0f, newGoal.y * -32.0f) - ai.position);
+
+
+				/*if (ai.currentGoal == ai.patrolFrom)
 				{
 					ai.currentGoal = ai.patrolTo;
 					ai.direction = Normalize(V2(ai.patrolTo.x * 32.0f, ai.patrolTo.y * -32.0f) - ai.position);
@@ -792,7 +813,7 @@ GameMain(Window window)
 				{
 					ai.currentGoal = ai.patrolFrom;
 					ai.direction = Normalize(V2(ai.patrolFrom.x * 32.0f, ai.patrolFrom.y * -32.0f) - ai.position);
-				}
+				}*/
 
 			}
 
@@ -800,32 +821,53 @@ GameMain(Window window)
 		else if (ai.state == Ai::State::ROAM) 
 		{
 			//Give some new direction
-			if (ai.frameCounter >= 4000)
+			if (ai.aiRoamStandStillTimer > 0) 
 			{
-				float LO = -1.0f;
-				float HI = 1.0f;
-				float rX = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
-				float rY = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
-				ai.direction = Normalize(V2(rX, rY));
-				ai.frameCounter = 0;
+				ai.aiRoamStandStillTimer--;
 			}
-
-			ai.position += ai.direction * 0.025f;
-			vec2<float> reflectionNormal = V2(0.0f, 0.0f);
-			vec2<float> moveDeltaAgent = ai.direction * 0.05f;
-			if (CheckTileCollision(&ai.position, moveDeltaAgent, &tilemap, V2(16.0f, 16.0f), &reflectionNormal))
+			else 
 			{
-				ai.direction = Normalize(Reflect(ai.direction, reflectionNormal));
-			}
+				if (ai.frameCounter >= ai.aiRoamWalkTimer)
+				{
+					ai.direction = GetRandomDirection();
+					ai.aiRoamWalkTimer = GetRandomTimeMillis(3, 7);
+					ai.aiRoamStandStillTimer = GetRandomTimeMillis(0, 3);
+					std::cout << "roam time: " << ai.aiRoamWalkTimer << std::endl;
+					std::cout << "stand still time: " << ai.aiRoamStandStillTimer << std::endl;
+					ai.frameCounter = 0;
+				}
 
-			ai.frameCounter++;
+				ai.position += ai.direction * 0.025f;
+				vec2<float> reflectionNormal = V2(0.0f, 0.0f);
+				vec2<float> moveDeltaAgent = ai.direction * 0.05f;
+				if (CheckTileCollision(&ai.position, moveDeltaAgent, &tilemap, V2(16.0f, 16.0f), &reflectionNormal))
+				{
+					ai.direction = Normalize(Reflect(ai.direction, reflectionNormal));
+				}
+
+				ai.frameCounter++;
+			}
+			
 		}
-
-
-
-
-
-
+		else if (ai.state == Ai::State::INSPECT) 
+		{
+			vec2<float> goalPosition = V2(ai.currentGoal.x * 32.0f, ai.currentGoal.y * -32.0f);
+			float lengthToGoal = Len(goalPosition - ai.position);
+			ai.position += ai.direction * 0.05f;
+			if (lengthToGoal < 1.0f)
+			{
+				if (ai.pathstack.capacity > 0)
+				{
+					ai.currentGoal = PopStack(&ai.pathstack);
+					vec2<float> goalFloat = V2(ai.currentGoal.x * 32.0f, ai.currentGoal.y * -32.0f); //y is reversed in directx
+					ai.direction = Normalize(goalFloat - ai.position);
+				}
+			} 
+			else 
+			{
+				ai.state == Ai::State::ROAM;
+			}
+		}
 
 
 
@@ -925,7 +967,7 @@ GameMain(Window window)
 		__int32 MSPerFrame = (__int32)(((1000 * CounterElapsed) / PerfCountFrequency));
 		__int32 FPS = PerfCountFrequency / CounterElapsed;
 
-		std::cout << "FPS: "<< FPS << std::endl;
+		//std::cout << "FPS: "<< FPS << std::endl;
 
 
 		LastCounter = EndCounter;

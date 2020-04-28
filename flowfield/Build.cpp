@@ -41,7 +41,8 @@
 #include "Level.cpp"
 #include "GLRenderer.cpp"
 
-
+#include "BinaryHeap.cpp"
+#include "Pathfinding.cpp"
 
 #include "GameMain.cpp"
 

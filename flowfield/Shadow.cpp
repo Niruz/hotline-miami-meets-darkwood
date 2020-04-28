@@ -10,7 +10,7 @@ struct Edge
 };
 
 
-struct Cell
+struct TileCell
 {
 	int edge_id[4];
 	int edge_exist_cell_exist = 0; //this is supposed to be a bit array for what is listed below
@@ -19,7 +19,7 @@ struct Cell
 };
 
 
-Cell* world;// = new Cell[20 * 20];
+TileCell* world;// = new Cell[20 * 20];
 std::vector<Edge> edges;
 
 
@@ -104,19 +104,19 @@ InitializeShadowEdges(float width, float height)
 	float halfWidth = frustum.halfWidth;
 	float halfHeight = frustum.halfHeight;
 	//Left
-	frustum.worldEdges.push_back(EDGE(V2(-halfWidth, -halfHeight), V2(-halfWidth, halfHeight)));
+	/*frustum.worldEdges.push_back(EDGE(V2(-halfWidth, -halfHeight), V2(-halfWidth, halfHeight)));
 	//Right
 	frustum.worldEdges.push_back(EDGE(V2(halfWidth, -halfHeight), V2(halfWidth, halfHeight)));
 	//Bottom
 	frustum.worldEdges.push_back(EDGE(V2(-halfWidth, -halfHeight), V2(halfWidth, -halfHeight)));
 	//Top
-	frustum.worldEdges.push_back(EDGE(V2(-halfWidth, halfHeight), V2(halfWidth, halfHeight)));
+	frustum.worldEdges.push_back(EDGE(V2(-halfWidth, halfHeight), V2(halfWidth, halfHeight)));*/
 }
 
 static void 
 UpdateShadowFrustum(vec2<float> player) 
 {
-	vec2<float> negatedPlayer = player;
+	/*vec2<float> negatedPlayer = player;
 	negatedPlayer.y = -negatedPlayer.y;
 	int startIndex = edges.size() - 4;
 	for (unsigned int i = 0; i < frustum.worldEdges.size(); i++)
@@ -126,7 +126,7 @@ UpdateShadowFrustum(vec2<float> player)
 		newEdge.end = frustum.worldEdges[i].end + negatedPlayer;
 		edges[startIndex] = newEdge;
 		startIndex++;
-	}
+	}*/
 }
 //TODO Extract to some header
 #define NORTH 0
@@ -139,7 +139,7 @@ float blockWidth = 32.0f;
 
 //Again this is possible somehow with bit shift magic
 static void
-SetCell(Tilemap* tilemap, Cell* cells, vec2<float> position)
+SetCell(Tilemap* tilemap, TileCell* cells, vec2<float> position)
 {
 	float remappedX = map(position.x, tilemap->worldXRange.x, tilemap->worldXRange.y, tilemap->tileXRange.x, tilemap->tileXRange.y);
 	float remappedY = map(position.y, tilemap->worldYRange.x, tilemap->worldYRange.y, tilemap->tileYRange.x, tilemap->tileYRange.y);
