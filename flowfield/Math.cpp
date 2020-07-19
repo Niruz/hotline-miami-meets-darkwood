@@ -160,6 +160,16 @@ operator += (vec2<T>& left, vec2<T>  right)
 }
 
 TEMPLATE
+vec2<T>
+operator -= (vec2<T>& left, vec2<T>  right)
+{
+	left.x -= right.x;
+	left.y -= right.y;
+
+	return left;
+}
+
+TEMPLATE
 bool
 operator == (vec2<T> left, vec2<T> right)
 {
@@ -352,6 +362,11 @@ setOrthoFrustum(float l, float r, float b, float t, float n, float f)
 
 const float Pi_ = 3.14159265359f;
 
+float 
+RadiansToDegrees(float radians)
+{
+	return radians * (180.0 / Pi_);
+}
 
 float
 DegreesToRadians(float degrees)

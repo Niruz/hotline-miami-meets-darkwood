@@ -18,7 +18,7 @@ GameResize(float newWidth, float newHeight)
 }
 
 
-#define SHADOWS false
+#define SHADOWS true
 #define DJIKSTRA false
 #if SHADOWS
 static int
@@ -36,16 +36,17 @@ GameMain(Window window)
 
 	Tilemap tilemap = GenerateTestTilemap();
 
-	InitializeShadowEdges((float)window.width, (float)window.height);
+	//InitializeShadowEdges((float)window.width, (float)window.height);
 
 
 	Shadow* shadow = CreateShadow(V2(0.0f, 0.0f), V3(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 		                                             static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 		                                             static_cast <float> (rand()) / static_cast <float> (RAND_MAX)),
-		Shadow::SHADOW_TYPE::CONE);
+		Shadow::SHADOW_TYPE::POINT);
+		//Shadow::SHADOW_TYPE::CONE);
 
 
-	world = new Cell[tilemap.width * tilemap.height];
+	world = new TileCell[tilemap.width * tilemap.height];
 	//populate the world with edges
 		//width 
 	for (int x = 1; x < (tilemap.width - 1); x++)
@@ -226,6 +227,12 @@ GameMain(Window window)
 		//player
 		PushTransform(camera, -4.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
 		DrawQuad(player, V2(32.0f, 32.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+		PopTransform();
+		//shadow map over player
+		//vec2<float> testDirection = Normalize(cursor - )
+		float rotationOfShadowMap = atan2f(-direction.y, direction.x);
+		PushTransform(camera, -3.0f, V2( cosf(rotationOfShadowMap + DegreesToRadians(-90.0f)) , sinf(rotationOfShadowMap + DegreesToRadians(-90.0f)) ) );
+		DrawQuad(player, V2(2000.0f, 2000.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), textures[SHADOWMAP].ID, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
 		PopTransform();
 
 
@@ -697,6 +704,10 @@ GameMain(Window window)
 	InitializeAi(&ai, 4, V2(4, 4), V2(4, 8), V2(10, 8), V2(10, 4));
 	//SetStateRoaming(&ai);
 
+	float doorRot = 0.0f;
+	Door door;
+	InitializeDoor(&door, V2(320.0f, -320.0f));
+
 	//This is the LOS path..
 	PathStack pathStack;
 	InitializeStack(&pathStack, 1);
@@ -736,13 +747,13 @@ GameMain(Window window)
 
 		vec2<float> moveDelta = V2(0.0f, 0.0f);
 		if (keyState.currentKeyState['D'])
-			moveDelta.x = 0.5f;
+			moveDelta.x = 0.25f;
 		if (keyState.currentKeyState['A'])
-			moveDelta.x = -0.5f;
+			moveDelta.x = -0.25f;
 		if (keyState.currentKeyState['W'])
-			moveDelta.y = 0.5f;
+			moveDelta.y = 0.25f;
 		if (keyState.currentKeyState['S'])
-			moveDelta.y = -0.5f;
+			moveDelta.y = -0.25f;
 
 		CheckTileCollision(&player, moveDelta, &tilemap, V2(14.0f, 14.0f));
 
@@ -865,7 +876,7 @@ GameMain(Window window)
 			} 
 			else 
 			{
-				ai.state == Ai::State::ROAM;
+				ai.state = Ai::State::ROAM;
 			}
 		}
 
@@ -888,9 +899,18 @@ GameMain(Window window)
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
+		CollisionData collided = CheckIfDoorAgentCollided(&door, player);
+
+		std::vector<vec2<float>> collisionPoints;
+		if (collided.collided)
+		{
+			collisionPoints = GetPointsInsideDoor(&door, player);
+			player += V2(collided.mtv.x, collided.mtv.y);
+		}
+
 		//Player
-		PushTransform(camera, -4.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
-		DrawQuad(player, V2(32.0f, 32.0f), GetColor(V4(0.0f, 1.0f, 0.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+		PushTransform(camera, -2.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+		DrawQuad(player, V2(32.0f, 32.0f), GetColor(V4(1.0f, 0.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
 		PopTransform();
 
 		//Tilemap
@@ -905,7 +925,7 @@ GameMain(Window window)
 		PushTransform(camera, -2.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
 		for (int i = 0; i < pathStack.capacity; i++)
 		{
-			DrawQuad(V2(pathStack.arr[i].x * 32.0f, pathStack.arr[i].y * -32.0f), V2(30.0f, 30.0f), GetColor(V4(1.0f, 0.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+			//DrawQuad(V2(pathStack.arr[i].x * 32.0f, pathStack.arr[i].y * -32.0f), V2(30.0f, 30.0f), GetColor(V4(1.0f, 0.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
 		}
 		PopTransform();
 
@@ -915,6 +935,122 @@ GameMain(Window window)
 		PopTransform();
 
 
+		//Door
+		PushTransform(camera, -1.5f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+		//DrawQuad(door.position, V2(30.0f, 30.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+		
+		doorRot += 0.0001f;
+		if (doorRot > 359.0f)
+			doorRot = 0.0f;
+
+		//RotateDoor(&door, 0.05f);
+
+
+		
+
+		//vec2<float> collisionPoint = GetPointsInsideDoor(&door, player);
+		
+
+		//Draw the normals
+		vec2<float> up = Normalize(door.vertices[2] - door.vertices[1]);
+		up = V2(-up.y, up.x);
+		vec2<float> right = Normalize(door.vertices[3] - door.vertices[2]);
+		right = V2(-right.y, right.x);
+		vec2<float> bottom = Normalize(door.vertices[0] - door.vertices[3]);
+		bottom = V2(-bottom.y, bottom.x);
+		vec2<float> left = Normalize(door.vertices[1] - door.vertices[0]);
+		left = V2(-left.y, left.x);
+		
+		DrawLine(door.relativePosition, door.relativePosition + (up * 64.0f),     GetColor(1.0f, 0.0f, 0.0f, 1.0f), 3.0f);
+		DrawLine(door.relativePosition, door.relativePosition + (right * 64.0f),  GetColor(0.0f, 1.0f, 0.0f, 1.0f), 3.0f);
+		DrawLine(door.relativePosition, door.relativePosition + (bottom * 64.0f), GetColor(0.0f, 0.0f, 1.0f, 1.0f), 3.0f);
+		DrawLine(door.relativePosition, door.relativePosition + (left * 64.0f),   GetColor(1.0f, 1.0f, 1.0f, 1.0f), 3.0f);
+
+		for (unsigned int i = 0; i < collisionPoints.size(); i++)
+		{
+			DrawQuad(collisionPoints[i], V2(8.0f, 8.0f), GetColor(V4(1.0f, 1.0f, 0.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+		}
+
+	//	need to rotate around the origin for htis to work
+		DrawDoor(&door, collided.collided);
+		PopTransform();
+
+
+		float dt = 0.0005f;
+		if (collided.collided)
+		{
+			if (collisionPoints.size() > 0)
+			{
+				//Apply the force in the opposite way of the minimum translation vector
+				vec2<float> force = -collided.mtv * 5000.0f;
+				vec2<float> centerOfMass = door.hingePosition;
+				vec2<float> momentArm = collisionPoints[0] - centerOfMass;
+
+				float inertia = 5.0f;
+				float torque = Cross(momentArm, force);
+			//	std::cout << "torque: " << torque << std::endl;
+
+			//	if ((!door.angularVelocity > 80.0f || !door.angularVelocity < 80.0f) && (!door.angularAcceleration > 80.0f || !door.angularAcceleration < 80.0f))
+			//	{
+				door.angularAcceleration += (torque / inertia) * dt;
+				door.angularVelocity += door.angularAcceleration * dt;
+				//door.angularVelocity = torque < 0 ? -7 : 7;
+			//	}
+
+				float cappedValue = 35.0f;
+
+				if (door.angularVelocity > cappedValue)
+				{
+					door.angularVelocity = cappedValue;
+				}
+				if (door.angularVelocity < -cappedValue)
+				{
+					door.angularVelocity = -cappedValue;
+				}
+
+				if (door.angularAcceleration > cappedValue)
+				{
+					door.angularAcceleration = cappedValue;
+				}
+				if (door.angularAcceleration < -cappedValue)
+				{
+					door.angularAcceleration = -cappedValue;
+				}
+				std::cout << "angular vel: " << door.angularVelocity << std::endl;
+				std::cout << "angular acc: " << door.angularAcceleration << std::endl;
+				door.active = true;
+			}
+		}
+
+		if (door.active)
+		{
+			//https://gamedev.stackexchange.com/questions/114983/how-to-apply-friction-vector-to-acceleration-in-top-down-2d-game
+			//I think this is where something more sophisticated is needed
+			//float fakeFriction = -door.angularAcceleration * 0.08f;
+			if (!collided.collided)
+			{
+				//float fakeFriction = -door.angularAcceleration * 0.05f;
+				//float frictionCoefficient = 0.9f;
+				//float fakeFriction = door.angularAcceleration < 0 ? frictionCoefficient : -frictionCoefficient;
+				//door.angularAcceleration += fakeFriction;
+				//door.angularVelocity += door.angularAcceleration * dt;
+				door.angularVelocity += -door.angularVelocity * 0.003f;
+
+				//If we're close to 0 we stop
+				if (fabsf(door.angularVelocity) < 0.0000001f)
+				{
+					door.angularAcceleration = 0.0f;
+					door.angularVelocity = 0.0f;
+					door.active = false;
+				}
+			}
+
+		}
+
+		door.rotationRadians += door.angularVelocity * dt;
+
+		RotateDoorRadians(&door, door.rotationRadians);
+		//door.rotationRadians += door.angularVelocity * dt;
 
 		End();
 		Flush();

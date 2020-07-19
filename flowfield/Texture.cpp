@@ -3,6 +3,7 @@
 enum TEXTURES
 {
 	TEST1,
+	SHADOWMAP,
 	MAX_TEXTURES
 };
 

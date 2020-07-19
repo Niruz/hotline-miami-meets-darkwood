@@ -239,7 +239,7 @@ ConvertTileMapToPolyMap(int sx, int sy, int w, int h, float blockWidth, int pitc
 						edge.end.x = edge.start.x;
 						edge.end.y = edge.start.y + blockWidth;
 
-						int edge_id = edges.size();
+						int edge_id = (int)edges.size();
 						edges.push_back(edge);
 
 						world[i].edge_id[EAST] = edge_id;

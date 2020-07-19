@@ -38,6 +38,7 @@
 #include "Tilemap.cpp"
 #include "Shadow.cpp"
 #include "Agent.cpp"
+#include "Door.cpp"
 #include "Level.cpp"
 #include "GLRenderer.cpp"
 

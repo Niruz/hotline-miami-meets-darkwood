@@ -143,6 +143,9 @@
     <None Include="BinaryHeap.cpp">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="Door.cpp">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="wglext.h">

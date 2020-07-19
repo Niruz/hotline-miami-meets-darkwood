@@ -736,6 +736,54 @@ DrawLine(vec2<float> start, vec2<float> end, unsigned int color, float lineSize)
 	activeRenderer->vertexBuffer->indexCount += 6;
 }
 
+static void
+DrawDoor(Door* door, bool collided)
+{
+	
+	Transform transform = *activeRenderer->transformationStack.transformationStackBack;
+	vec2<float> translation = transform.position;
+	const float& depth = transform.depth;
+
+	unsigned int color = collided ? GetColor(1.0f, 0.0f, 0.0f, 1.0f) : GetColor(0.0f, 0.0f, 1.0f, 1.0f);
+
+	vec3<float> convertedPosition = V3(door->vertices[0].x, door->vertices[0].y, depth);
+	convertedPosition.x = convertedPosition.x + translation.x;
+	convertedPosition.y = convertedPosition.y + translation.y;
+	activeRenderer->vertexBuffer->buffer->position = convertedPosition;// Bottom left.
+	activeRenderer->vertexBuffer->buffer->texture = V2(0.0f, 0.0f);
+	activeRenderer->vertexBuffer->buffer->color = color;
+	activeRenderer->vertexBuffer->buffer->textureID = -1;
+	activeRenderer->vertexBuffer->buffer++;
+
+	convertedPosition = V3(door->vertices[1].x, door->vertices[1].y, depth);
+	convertedPosition.x = convertedPosition.x + translation.x;
+	convertedPosition.y = convertedPosition.y + translation.y; activeRenderer->vertexBuffer->buffer->position = convertedPosition;  // Top Left.
+	activeRenderer->vertexBuffer->buffer->texture = V2(0.0f, 0.0f);
+	activeRenderer->vertexBuffer->buffer->color = color;
+	activeRenderer->vertexBuffer->buffer->textureID = -1;
+	activeRenderer->vertexBuffer->buffer++;
+
+	convertedPosition = V3(door->vertices[2].x, door->vertices[2].y, depth);
+	convertedPosition.x = convertedPosition.x + translation.x;
+	convertedPosition.y = convertedPosition.y + translation.y;
+	activeRenderer->vertexBuffer->buffer->position = convertedPosition;  // Top right.
+	activeRenderer->vertexBuffer->buffer->texture = V2(0.0f, 0.0f);
+	activeRenderer->vertexBuffer->buffer->color = color;
+	activeRenderer->vertexBuffer->buffer->textureID = -1;
+	activeRenderer->vertexBuffer->buffer++;
+
+	convertedPosition = V3(door->vertices[3].x, door->vertices[3].y, depth);
+	convertedPosition.x = convertedPosition.x + translation.x;
+	convertedPosition.y = convertedPosition.y + translation.y;
+	activeRenderer->vertexBuffer->buffer->position = convertedPosition;  // Bottom right.
+	activeRenderer->vertexBuffer->buffer->texture = V2(0.0f, 0.0f);
+	activeRenderer->vertexBuffer->buffer->color = color;
+	activeRenderer->vertexBuffer->buffer->textureID = -1;
+	activeRenderer->vertexBuffer->buffer++;
+
+	activeRenderer->vertexBuffer->indexCount += 6;
+}
+
 
 static void
 DrawCircle(vec2<float> position, float radius, unsigned int color, unsigned int numberOfSegments)

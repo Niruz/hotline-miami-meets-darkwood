@@ -52,5 +52,10 @@ LoadAssets(Window* window)
 		return 0;
 	}
 
+	if (!LoadTexture("Textures/shadowmap.png", SHADOWMAP))
+	{
+		return 0;
+	}
+
 	return 1;
 }
