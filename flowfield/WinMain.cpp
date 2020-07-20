@@ -392,6 +392,11 @@ WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd_line, int show)
 		MessageBox(window.window, "Could not initialize Assets", "Error", MB_OK);
 		return 0;
 	}
+	if (!StartCounter())
+	{
+		MessageBox(window.window, "Could not initialize Timer", "Error", MB_OK);
+		return 0;
+	}
 
 
 	return GameMain(window);

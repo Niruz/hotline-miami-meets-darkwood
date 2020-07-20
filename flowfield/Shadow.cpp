@@ -10,7 +10,7 @@ struct Edge
 };
 
 
-struct TileCell
+struct TileNeighbourMap
 {
 	int edge_id[4];
 	int edge_exist_cell_exist = 0; //this is supposed to be a bit array for what is listed below
@@ -19,13 +19,13 @@ struct TileCell
 };
 
 
-TileCell* world;// = new Cell[20 * 20];
+TileNeighbourMap* tileNeighbourMap;// = new Cell[20 * 20];
 std::vector<Edge> edges;
 
 
-struct Shadow
+struct Light
 {
-	enum SHADOW_TYPE
+	enum LIGHT_TYPE
 	{
 		POINT,
 		CONE
@@ -38,37 +38,37 @@ struct Shadow
 	float radius;
 	float zOffset;
 	float attenuation;
-	float shadowZPos = 30.0f;
+	float lightZPos = 30.0f;
 	float left_ang = 0.0f;
 	float right_ang = 0.0f;
 	bool reversingNeeded = false;
 	int index = -1;
 	vec2<float> direction;
-	SHADOW_TYPE type;
+	LIGHT_TYPE type;
 };
 
-struct Shadows
+struct Lights
 {
-	static const unsigned int MAX_SHADOWS = 10;
-	unsigned int numberOfActiveShadows = 0;
-	Shadow shadows[MAX_SHADOWS];
+	static const unsigned int MAX_LIGHTS = 10;
+	unsigned int numberOfActiveLights = 0;
+	Light lights[MAX_LIGHTS];
 };
 
-Shadows shadows;
+Lights lights;
 
-static Shadow* 
-CreateShadow(vec2<float> position, vec3<float> color, Shadow::SHADOW_TYPE type) 
+static Light* 
+CreateLight(vec2<float> position, vec3<float> color, Light::LIGHT_TYPE type) 
 {
-	if (shadows.numberOfActiveShadows == shadows.MAX_SHADOWS)
+	if (lights.numberOfActiveLights == lights.MAX_LIGHTS)
 		return nullptr;
 
-	shadows.numberOfActiveShadows++;
+	lights.numberOfActiveLights++;
 
-	shadows.shadows[shadows.numberOfActiveShadows - 1].position = position;
-	shadows.shadows[shadows.numberOfActiveShadows - 1].color = color;
-	shadows.shadows[shadows.numberOfActiveShadows - 1].type = type;
-	shadows.shadows[shadows.numberOfActiveShadows - 1].position = V2(0.0f, 0.0f);
-	return &shadows.shadows[shadows.numberOfActiveShadows - 1];
+	lights.lights[lights.numberOfActiveLights - 1].position = position;
+	lights.lights[lights.numberOfActiveLights - 1].color = color;
+	lights.lights[lights.numberOfActiveLights - 1].type = type;
+	lights.lights[lights.numberOfActiveLights - 1].position = V2(0.0f, 0.0f);
+	return &lights.lights[lights.numberOfActiveLights - 1];
 }
 
 
@@ -93,7 +93,7 @@ EDGE(vec2<float> start, vec2<float> end)
 }
 
 static void
-InitializeShadowEdges(float width, float height) 
+InitializeLightEdges(float width, float height) 
 {
 	frustum.width = width;
 	frustum.height = height;
@@ -114,7 +114,7 @@ InitializeShadowEdges(float width, float height)
 }
 
 static void 
-UpdateShadowFrustum(vec2<float> player) 
+UpdateLightFrustum(vec2<float> player) 
 {
 	/*vec2<float> negatedPlayer = player;
 	negatedPlayer.y = -negatedPlayer.y;
@@ -139,7 +139,7 @@ float blockWidth = 32.0f;
 
 //Again this is possible somehow with bit shift magic
 static void
-SetCell(Tilemap* tilemap, TileCell* cells, vec2<float> position)
+SetCell(Tilemap* tilemap, TileNeighbourMap* cells, vec2<float> position)
 {
 	float remappedX = map(position.x, tilemap->worldXRange.x, tilemap->worldXRange.y, tilemap->tileXRange.x, tilemap->tileXRange.y);
 	float remappedY = map(position.y, tilemap->worldYRange.x, tilemap->worldYRange.y, tilemap->tileYRange.x, tilemap->tileYRange.y);
@@ -162,7 +162,7 @@ SetCell(Tilemap* tilemap, TileCell* cells, vec2<float> position)
 }
 
 static void
-ConvertTileMapToPolyMap(int sx, int sy, int w, int h, float blockWidth, int pitch, vec2<float> camera) 
+ConvertTileMapToPolyMap(int sx, int sy, int w, int h, float blockWidth, int pitch/*, vec2<float> camera*/) 
 {
 	//Clear "PolyMap"
 	edges.clear();
@@ -170,9 +170,9 @@ ConvertTileMapToPolyMap(int sx, int sy, int w, int h, float blockWidth, int pitc
 	for (int x = 0; x < w; x++)
 		for (int y = 0; y < h; y++) 
 			for (int j = 0; j < 4; j++) {
-				ClearBit(&world[(y + sy) * pitch + (x + sx)].edge_exist_cell_exist, j);
+				ClearBit(&tileNeighbourMap[(y + sy) * pitch + (x + sx)].edge_exist_cell_exist, j);
 				//world[(y + sy) * pitch + (x + sx)].edge_exist[j] = false;
-				world[(y + sy) * pitch + (x + sx)].edge_id[j] = 0;
+				tileNeighbourMap[(y + sy) * pitch + (x + sx)].edge_id[j] = 0;
 			}
 
 	for (int x = 1; x < w - 1; x++)
@@ -186,21 +186,21 @@ ConvertTileMapToPolyMap(int sx, int sy, int w, int h, float blockWidth, int pitc
 
 			//If this cell exists, run algorithm
 			//if (world[i].exist) {
-			if (TestBit(&world[i].edge_exist_cell_exist, CELL_EXIST)) {
+			if (TestBit(&tileNeighbourMap[i].edge_exist_cell_exist, CELL_EXIST)) {
 
 				//If this cell has no western neighbour, it needs a western edge
 				//if (!world[w].exist) {
-				if (!TestBit(&world[w].edge_exist_cell_exist, CELL_EXIST)) {
+				if (!TestBit(&tileNeighbourMap[w].edge_exist_cell_exist, CELL_EXIST)) {
 
 					//It can either extend its northern neighbours western edge or 
 					//Or it can start a new one if neither of these had one
 					//if (world[n].edge_exist[WEST]) {
-					if (TestBit(&world[n].edge_exist_cell_exist, WEST)) {
+					if (TestBit(&tileNeighbourMap[n].edge_exist_cell_exist, WEST)) {
 						//Northern neighbour has a western edge, so we can extend it downward
-						edges[world[n].edge_id[WEST]].end.y += blockWidth;
-						world[i].edge_id[WEST] = world[n].edge_id[WEST];
+						edges[tileNeighbourMap[n].edge_id[WEST]].end.y += blockWidth;
+						tileNeighbourMap[i].edge_id[WEST] = tileNeighbourMap[n].edge_id[WEST];
 						//world[i].edge_exist[WEST] = true;
-						SetBit(&world[i].edge_exist_cell_exist, WEST);
+						SetBit(&tileNeighbourMap[i].edge_exist_cell_exist, WEST);
 					}
 					else {
 						Edge edge;
@@ -212,25 +212,25 @@ ConvertTileMapToPolyMap(int sx, int sy, int w, int h, float blockWidth, int pitc
 						int edge_id = edges.size();
 						edges.push_back(edge);
 
-						world[i].edge_id[WEST] = edge_id;
+						tileNeighbourMap[i].edge_id[WEST] = edge_id;
 						//world[i].edge_exist[WEST] = true;
-						SetBit(&world[i].edge_exist_cell_exist, WEST);
+						SetBit(&tileNeighbourMap[i].edge_exist_cell_exist, WEST);
 					}
 				}
 
 				//If this cell has no western neighbour, it needs a eastern edge
 				//if (!world[e].exist) {
-				if (!TestBit(&world[e].edge_exist_cell_exist, CELL_EXIST)) {
+				if (!TestBit(&tileNeighbourMap[e].edge_exist_cell_exist, CELL_EXIST)) {
 
 					//It can either extend its northern neighbours western edge or 
 					//Or it can start a new one if neither of these had one
 					//if (world[n].edge_exist[EAST]) {
-					if (TestBit(&world[n].edge_exist_cell_exist, EAST)) {
+					if (TestBit(&tileNeighbourMap[n].edge_exist_cell_exist, EAST)) {
 						//Northern neighbour has a western edge, so we can extend it downward
-						edges[world[n].edge_id[EAST]].end.y += blockWidth;
-						world[i].edge_id[EAST] = world[n].edge_id[EAST];
+						edges[tileNeighbourMap[n].edge_id[EAST]].end.y += blockWidth;
+						tileNeighbourMap[i].edge_id[EAST] = tileNeighbourMap[n].edge_id[EAST];
 						//world[i].edge_exist[EAST] = true;
-						SetBit(&world[i].edge_exist_cell_exist, EAST);
+						SetBit(&tileNeighbourMap[i].edge_exist_cell_exist, EAST);
 					}
 					else {
 						Edge edge;
@@ -242,25 +242,25 @@ ConvertTileMapToPolyMap(int sx, int sy, int w, int h, float blockWidth, int pitc
 						int edge_id = (int)edges.size();
 						edges.push_back(edge);
 
-						world[i].edge_id[EAST] = edge_id;
+						tileNeighbourMap[i].edge_id[EAST] = edge_id;
 						//world[i].edge_exist[EAST] = true;
-						SetBit(&world[i].edge_exist_cell_exist, EAST);
+						SetBit(&tileNeighbourMap[i].edge_exist_cell_exist, EAST);
 					}
 				}
 
 				//If this cell has no northern neighbour, it needs a northern edge
 				//if (!world[n].exist) {
-				if (!TestBit(&world[n].edge_exist_cell_exist, CELL_EXIST)) {
+				if (!TestBit(&tileNeighbourMap[n].edge_exist_cell_exist, CELL_EXIST)) {
 
 					//It can either extend its western neighbour e or 
 					//Or it can start a new one if neither of these had one
 					//if (world[w].edge_exist[NORTH]) {
-					if (TestBit(&world[w].edge_exist_cell_exist, NORTH)) {
+					if (TestBit(&tileNeighbourMap[w].edge_exist_cell_exist, NORTH)) {
 						//Northern neighbour has a western edge, so we can extend it downward
-						edges[world[w].edge_id[NORTH]].end.x += blockWidth;
-						world[i].edge_id[NORTH] = world[w].edge_id[NORTH];
+						edges[tileNeighbourMap[w].edge_id[NORTH]].end.x += blockWidth;
+						tileNeighbourMap[i].edge_id[NORTH] = tileNeighbourMap[w].edge_id[NORTH];
 						//world[i].edge_exist[NORTH] = true;
-						SetBit(&world[i].edge_exist_cell_exist, NORTH);
+						SetBit(&tileNeighbourMap[i].edge_exist_cell_exist, NORTH);
 					}
 					else {
 						Edge edge;
@@ -272,26 +272,26 @@ ConvertTileMapToPolyMap(int sx, int sy, int w, int h, float blockWidth, int pitc
 						int edge_id = edges.size();
 						edges.push_back(edge);
 
-						world[i].edge_id[NORTH] = edge_id;
+						tileNeighbourMap[i].edge_id[NORTH] = edge_id;
 						//world[i].edge_exist[NORTH] = true;
-						SetBit(&world[i].edge_exist_cell_exist, NORTH);
+						SetBit(&tileNeighbourMap[i].edge_exist_cell_exist, NORTH);
 					}
 				}
 
 
 				//If this cell has no southern neighbour, it needs a northern edge
 				//if (!world[s].exist) {
-				if (!TestBit(&world[s].edge_exist_cell_exist, CELL_EXIST)) {
+				if (!TestBit(&tileNeighbourMap[s].edge_exist_cell_exist, CELL_EXIST)) {
 
 					//It can either extend its western neighbour e or 
 					//Or it can start a new one if neither of these had one
 					//if (world[w].edge_exist[SOUTH]) {
-					if (TestBit(&world[w].edge_exist_cell_exist, SOUTH)) {
+					if (TestBit(&tileNeighbourMap[w].edge_exist_cell_exist, SOUTH)) {
 						//Northern neighbour has a western edge, so we can extend it downward
-						edges[world[w].edge_id[SOUTH]].end.x += blockWidth;
-						world[i].edge_id[SOUTH] = world[w].edge_id[SOUTH];
+						edges[tileNeighbourMap[w].edge_id[SOUTH]].end.x += blockWidth;
+						tileNeighbourMap[i].edge_id[SOUTH] = tileNeighbourMap[w].edge_id[SOUTH];
 						//world[i].edge_exist[SOUTH] = true;
-						SetBit(&world[i].edge_exist_cell_exist, SOUTH);
+						SetBit(&tileNeighbourMap[i].edge_exist_cell_exist, SOUTH);
 					}
 					else {
 						Edge edge;
@@ -303,9 +303,9 @@ ConvertTileMapToPolyMap(int sx, int sy, int w, int h, float blockWidth, int pitc
 						int edge_id = edges.size();
 						edges.push_back(edge);
 
-						world[i].edge_id[SOUTH] = edge_id;
+						tileNeighbourMap[i].edge_id[SOUTH] = edge_id;
 						//world[i].edge_exist[SOUTH] = true;
-						SetBit(&world[i].edge_exist_cell_exist, SOUTH);
+						SetBit(&tileNeighbourMap[i].edge_exist_cell_exist, SOUTH);
 					}
 				}
 
@@ -322,14 +322,14 @@ ConvertTileMapToPolyMap(int sx, int sy, int w, int h, float blockWidth, int pitc
 
 		//Add the world edges
 
-		camera.y = -camera.y;
+	/*	camera.y = -camera.y;
 		for(unsigned int i = 0; i < frustum.worldEdges.size(); i++ )
 		{
 			Edge newEdge;
 			newEdge.start = frustum.worldEdges[i].start + camera;
 			newEdge.end   = frustum.worldEdges[i].end + camera;
 			edges.push_back(newEdge);
-		}
+		}*/
 }
 
 static float
@@ -362,15 +362,15 @@ NormalizeAngle(int angle)
 	return angle;
 }
 static void
-CalculateConeShadow(Shadow* shadow, float radius)
+CalculateConeLight(Light* light, float radius)
 {
-	shadow->visibilityPolygonPoints.clear();
+	light->visibilityPolygonPoints.clear();
 
 	//Note that y is negative
 	//float ox = shadow->position.x;
 	//float oy = -shadow->position.y;
 
-	vec2<float> start = V2(shadow->position.x, -shadow->position.y);
+	vec2<float> start = V2(light->position.x, -light->position.y);
 
 	//This is because everything else is calculated from a mid point position
 	//start = start + V2(16.0f, -16.0f);
@@ -382,8 +382,8 @@ CalculateConeShadow(Shadow* shadow, float radius)
 	*/
 
 
-	vec2<float> left = RotateVec(shadow->direction, -30.0);
-	vec2<float> right = RotateVec(shadow->direction, 30.0);
+	vec2<float> left = RotateVec(light->direction, -30.0);
+	vec2<float> right = RotateVec(light->direction, 30.0);
 
 	/*if ((left.x < 0.0f && left.y > 0.0f) && (right.x < 0.0f && right.y < 0.0f))
 	{
@@ -463,7 +463,7 @@ CalculateConeShadow(Shadow* shadow, float radius)
 			float convertRadiansToDegrees = 180.0 / 3.14159265359;
 			float resultInDegrees = min_ang * convertRadiansToDegrees + 180.0; // 0 to 360 degrees
 			min_ang = resultInDegrees;// NormalizeAngle(resultInDegrees);
-			shadow->visibilityPolygonPoints.push_back(V3(min_ang, min_px, min_py));
+			light->visibilityPolygonPoints.push_back(V3(min_ang, min_px, min_py));
 			//tempResults.push_back(V3(min_ang, min_px, min_py));
 		}
 
@@ -474,14 +474,14 @@ CalculateConeShadow(Shadow* shadow, float radius)
 	if (shadow->visibilityPolygonPoints.size() == 1)
 		std::cout << "its 1 " << std::endl;*/
 	//1 is right
-	shadow->reversingNeeded = false;
-	if (shadow->visibilityPolygonPoints.size() == 2) 
+	light->reversingNeeded = false;
+	if (light->visibilityPolygonPoints.size() == 2) 
 	{
-		if (abs(shadow->visibilityPolygonPoints[0].x - shadow->visibilityPolygonPoints[1].x) > 65.0f)
+		if (abs(light->visibilityPolygonPoints[0].x - light->visibilityPolygonPoints[1].x) > 65.0f)
 		{
-			if (shadow->visibilityPolygonPoints[0].x > shadow->visibilityPolygonPoints[1].x)
+			if (light->visibilityPolygonPoints[0].x > light->visibilityPolygonPoints[1].x)
 			{
-				shadow->reversingNeeded = true;
+				light->reversingNeeded = true;
 				/*vec2<float> temp = V2(shadow->visibilityPolygonPoints[0].y, shadow->visibilityPolygonPoints[0].z);
 				shadow->visibilityPolygonPoints[0].y = shadow->visibilityPolygonPoints[1].y;
 				shadow->visibilityPolygonPoints[0].z = shadow->visibilityPolygonPoints[1].z;
@@ -708,7 +708,7 @@ CalculateConeShadow(Shadow* shadow, float radius)
 					float convertRadiansToDegrees = 180.0 / 3.14159265359;
 					float resultInDegrees = min_ang * convertRadiansToDegrees + 180.0; // 0 to 360 degrees
 					min_ang = resultInDegrees;// NormalizeAngle(resultInDegrees);
-					shadow->visibilityPolygonPoints.push_back(V3(min_ang, min_px, min_py));
+					light->visibilityPolygonPoints.push_back(V3(min_ang, min_px, min_py));
 				}
 					
 			}
@@ -759,8 +759,8 @@ CalculateConeShadow(Shadow* shadow, float radius)
 
 	std::sort
 	(
-		shadow->visibilityPolygonPoints.begin(),
-		shadow->visibilityPolygonPoints.end(),
+		light->visibilityPolygonPoints.begin(),
+		light->visibilityPolygonPoints.end(),
 		[&](const vec3<float>& t1, const vec3<float>& t2)
 		{
 			return t1.x < t2.x;
@@ -806,32 +806,32 @@ CalculateConeShadow(Shadow* shadow, float radius)
 
 
 	//probably not needed, light algorithm is way heavier than drawing a few triangles
-	int raysCast = shadow->visibilityPolygonPoints.size();
+	int raysCast = light->visibilityPolygonPoints.size();
 	//std::cout << "rays cast: " << raysCast << std::endl;
 
 	auto it = unique(
-		shadow->visibilityPolygonPoints.begin(),
-		shadow->visibilityPolygonPoints.end(),
+		light->visibilityPolygonPoints.begin(),
+		light->visibilityPolygonPoints.end(),
 		[&](vec3<float>& t1, vec3<float>& t2)
 		{
 			return fabs(t1.y - t2.y) < 0.1f && fabs(t1.z - t2.z) < 0.1f;
 		});
-	shadow->visibilityPolygonPoints.resize(distance(shadow->visibilityPolygonPoints.begin(), it));
+	light->visibilityPolygonPoints.resize(distance(light->visibilityPolygonPoints.begin(), it));
 	
 
 
 
 
-	shadow->index = -1;
-	if (shadow->reversingNeeded) 
+	light->index = -1;
+	if (light->reversingNeeded) 
 	{
-		shadow->index = -1;
+		light->index = -1;
 		float threshold = 360.0f - 60.0f; // enitre cone width
-		for (unsigned int i = 0; i < shadow->visibilityPolygonPoints.size(); i++)
+		for (unsigned int i = 0; i < light->visibilityPolygonPoints.size(); i++)
 		{
-			if (shadow->visibilityPolygonPoints[i].x > threshold)
+			if (light->visibilityPolygonPoints[i].x > threshold)
 			{
-				shadow->index = i;
+				light->index = i;
 				break;
 			}
 		}
@@ -884,18 +884,18 @@ CalculateConeShadow(Shadow* shadow, float radius)
 	
 
 
-	int raysDrawn = shadow->visibilityPolygonPoints.size();
+	int raysDrawn = light->visibilityPolygonPoints.size();
 
 }
 
 static void 
-CalculatePointShadow(Shadow* shadow, float radius)
+CalculatePointLight(Light* light, float radius)
 {
-	shadow->visibilityPolygonPoints.clear();
+	light->visibilityPolygonPoints.clear();
 
 	//Note that y is negative
-	float ox = shadow->position.x;
-	float oy = -shadow->position.y;
+	float ox = light->position.x;
+	float oy = -light->position.y;
 
 
 	//needed because of how we render stuff, this shadow thing is just a "render" step anyway so its in line with other stuff
@@ -963,15 +963,15 @@ CalculatePointShadow(Shadow* shadow, float radius)
 				}
 
 				if (valid)
-					shadow->visibilityPolygonPoints.push_back(V3(min_ang, min_px, min_py));
+					light->visibilityPolygonPoints.push_back(V3(min_ang, min_px, min_py));
 			}
 		}
 	}
 
 	std::sort
 	(
-		shadow->visibilityPolygonPoints.begin(),
-		shadow->visibilityPolygonPoints.end(),
+		light->visibilityPolygonPoints.begin(),
+		light->visibilityPolygonPoints.end(),
 		[&](const vec3<float>& t1, const vec3<float>& t2)
 		{
 			return t1.x < t2.x;
@@ -980,42 +980,42 @@ CalculatePointShadow(Shadow* shadow, float radius)
 
 
 	//probably not needed, light algorithm is way heavier than drawing a few triangles
-	int raysCast = shadow->visibilityPolygonPoints.size();
+	int raysCast = light->visibilityPolygonPoints.size();
 	//std::cout << "rays cast: " << raysCast << std::endl;
 
 	auto it = unique(
-		shadow->visibilityPolygonPoints.begin(),
-		shadow->visibilityPolygonPoints.end(),
+		light->visibilityPolygonPoints.begin(),
+		light->visibilityPolygonPoints.end(),
 		[&](vec3<float>& t1, vec3<float>& t2)
 		{
 			return fabs(t1.y - t2.y) < 0.1f && fabs(t1.z - t2.z) < 0.1f;
 		});
-	shadow->visibilityPolygonPoints.resize(distance(shadow->visibilityPolygonPoints.begin(), it));
+	light->visibilityPolygonPoints.resize(distance(light->visibilityPolygonPoints.begin(), it));
 
 
-	int raysDrawn = shadow->visibilityPolygonPoints.size();
+	int raysDrawn = light->visibilityPolygonPoints.size();
 
 }
 
 static void
-CalculateVisibilityPolgyons(Shadow* shadow, float radius)
+CalculateVisibilityPolgyons(Light* light, float radius)
 {
 
-	if (shadow->type == Shadow::SHADOW_TYPE::POINT)
-		CalculatePointShadow(shadow, radius);
+	if (light->type == Light::LIGHT_TYPE::POINT)
+		CalculatePointLight(light, radius);
 	else 
-		CalculateConeShadow(shadow, radius);
+		CalculateConeLight(light, radius);
 }
 
 static void
 CalculateVisibilityPolgyons(float radius)
 {
-	for (unsigned int k = 0; k < shadows.numberOfActiveShadows; k++) 
+	for (unsigned int k = 0; k < lights.numberOfActiveLights; k++) 
 	{
-		if (shadows.shadows[k].type == Shadow::SHADOW_TYPE::POINT)
-			CalculatePointShadow(&shadows.shadows[k], radius);
+		if (lights.lights[k].type == Light::LIGHT_TYPE::POINT)
+			CalculatePointLight(&lights.lights[k], radius);
 		else
-			CalculateConeShadow(&shadows.shadows[k], radius);
+			CalculateConeLight(&lights.lights[k], radius);
 
 	}
 

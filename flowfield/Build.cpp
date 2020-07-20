@@ -19,7 +19,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include "DirectSound.cpp"
+#include "DirectSound.cpp" //this actually includes some windows/c++ headers that we might want to move
+
+#include "Timer.cpp"
 
 #include "GLite.h"
 #include "Input.cpp"
@@ -45,6 +47,9 @@
 #include "BinaryHeap.cpp"
 #include "Pathfinding.cpp"
 
+#include "GameGlobals.cpp"
+#include "PeekMessage.cpp"
+#include "Physics.cpp"
 #include "GameMain.cpp"
 
 

@@ -1,4 +1,27 @@
 
+struct Camera
+{
+	vec2<float> position;
+};
+
+struct Player
+{
+	vec2<float> position;
+	Camera camera;
+};
+
+static void
+InitializePlayer(Player* player, const vec2<float>& position)
+{
+	player->position = position;
+	player->camera.position = -position;
+}
+
+static void
+UpdateCamera(Player* player)
+{
+	player->camera.position = -player->position;
+}
 
 
 struct Ai
@@ -34,6 +57,17 @@ struct Ai
 
 	State state;
 };
+
+struct Level
+{
+
+};
+
+static void
+InitializeLevel(Level* level)
+{
+
+}
 
 static void
 InitializeAi(Ai* ai, vec2<int> patrolFrom, vec2<int> patrolTo)

@@ -2,6 +2,8 @@
 
 layout(location = 0) out uint stencil;
 
+uniform sampler2D shadowMapTexture;
+
 in DATA
 {
 	vec4 pos;
@@ -13,5 +15,7 @@ in DATA
 
 void main()
 {
-	stencil = 1;
+	//stencil = 1;
+	uint green = uint(texture(shadowMapTexture, fs_in.texCoords).x);
+	stencil = green;
 }

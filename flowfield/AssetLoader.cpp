@@ -25,7 +25,7 @@ LoadAssets(Window* window)
 	{
 		return 0;
 	}
-	if (!InitShader(CIRCLE_SHADER, "Shaders/circleVertex.glsl", "Shaders/circleFragment.glsl"))
+	if (!InitShader(STENCIL_SHADER, "Shaders/circleVertex.glsl", "Shaders/circleFragment.glsl"))
 	{
 		return 0;
 	}

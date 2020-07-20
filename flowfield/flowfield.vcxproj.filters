@@ -146,6 +146,18 @@
     <None Include="Door.cpp">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="Timer.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="PeekMessage.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="GameGlobals.cpp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Physics.cpp">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="wglext.h">

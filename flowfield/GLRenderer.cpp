@@ -16,7 +16,7 @@ enum FRAME_BUFFERS
 {
 	OFF_SCREEN_COLOR_BUFFER,
 	OFF_SCREEN_SHADOW_BUFFER,
-	OFF_SCREEN_CIRCLE_BUFFER,
+	OFF_SCREEN_STENCIL_BUFFER,
 	MAX_FRAME_BUFFERS,
 };
 
@@ -326,7 +326,7 @@ InitializeOffScreenBuffer(float width, float height)
 			GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
 			glDrawBuffers(1, DrawBuffers);
 		}
-		else if (i == OFF_SCREEN_CIRCLE_BUFFER)
+		else if (i == OFF_SCREEN_STENCIL_BUFFER)
 		{
 
 			glGenTextures(1, &framebuffers[i].stencilID);
@@ -427,10 +427,11 @@ InitializeRendererData(const mat4x4& projectionMatrix, float width, float height
 	setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestricted", 0);
 	Unbind(&shaders[SHADOW_SHADER]);
 
-	Bind(&shaders[CIRCLE_SHADER]);
-	setUniformMatrix4fv(&shaders[CIRCLE_SHADER], "projectionMatrix", 1, GL_FALSE, projectionMatrix);
+	Bind(&shaders[STENCIL_SHADER]);
+	setUniformMatrix4fv(&shaders[STENCIL_SHADER], "projectionMatrix", 1, GL_FALSE, projectionMatrix);
 	setUniform1i(&shaders[QUAD_SHADER], "shouldLightBeRestricted", 0);
-	Unbind(&shaders[CIRCLE_SHADER]);
+	setUniform1i(&shaders[SHADOW_SHADER], "shadowMapTexture", 1);
+	Unbind(&shaders[STENCIL_SHADER]);
 
 	Bind(&shaders[QUAD_SHADER]);
 	setUniform1i(&shaders[QUAD_SHADER], "colorTexture", 0);
@@ -974,6 +975,129 @@ DrawTriangle(vec2<float> position, vec2<float> size, unsigned int color)
 }
 */
 
+//This method only exists because one buffer uses triangles and the other uses 4 points, DONT USE THIS
+static void
+DrawQuad2(vec2<float> position, vec2<float> size, unsigned int color, int textureId, vec2<float> uvBotLeft, vec2<float> uvSize)
+{
+	const int tid = textureId;
+
+	float ts = 0.0f;
+	if (tid > 0)
+	{
+		bool found = false;
+		for (int i = 0; i < activeRenderer->textureSlots.size(); i++)
+		{
+			if (activeRenderer->textureSlots[i] == tid)
+			{
+				ts = (float)(i + 1);
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
+		{
+			//This needs to be done if we run out of texture slots
+			if (activeRenderer->textureSlots.size() >= RENDERER_MAX_TEXTURES)
+			{
+				End();
+				Flush();
+				Begin(activeRenderer);
+				//myTextureSlots.clear();
+			}
+			activeRenderer->textureSlots.push_back(tid);
+			ts = (float)(activeRenderer->textureSlots.size());
+		}
+	}
+
+	vec2<float> halfSize = V2(size.x * 0.5f, size.y * 0.5f);
+	vec2<float> uv1 = V2(uvBotLeft.x, uvBotLeft.y + uvSize.y);
+	vec2<float> uv2 = uvBotLeft;
+	vec2<float> uv3 = V2(uvBotLeft.x + uvSize.x, uvBotLeft.y);
+	vec2<float> uv4 = V2(uvBotLeft.x + uvSize.x, uvBotLeft.y + uvSize.y);
+
+	Transform transform = *activeRenderer->transformationStack.transformationStackBack;
+	const vec2<float>& translation = transform.position;
+	const vec2<float>& rotation = transform.rotation;
+	const float& depth = transform.depth;
+
+	//x = x * rotation.cos + y * (-1.0f*rotation.sin);
+	//y = y * rotation.sin + y * rotation.cos;
+
+	//x = x * rotation.cos + y * (-1.0f*rotation.sin);
+	//y = y * rotation.sin + y * rotation.cos;
+
+	vec2<float> rotated;
+
+	vec3<float> convertedPosition = V3((-halfSize.x), (-halfSize.y), depth);
+	rotated.x = convertedPosition.x * rotation.cos - convertedPosition.y * rotation.sin;
+	rotated.y = convertedPosition.x * rotation.sin + convertedPosition.y * rotation.cos;
+	convertedPosition.x = rotated.x + translation.x + position.x;
+	convertedPosition.y = rotated.y + translation.y + position.y;
+	activeRenderer->vertexBuffer->buffer->position = convertedPosition;// Bottom left.
+	activeRenderer->vertexBuffer->buffer->texture = V2(uv1.x, uv1.y);
+	activeRenderer->vertexBuffer->buffer->color = color;
+	activeRenderer->vertexBuffer->buffer->textureID = ts;
+	activeRenderer->vertexBuffer->buffer++;
+
+	convertedPosition = V3((-halfSize.x), (halfSize.y), depth);
+	rotated.x = convertedPosition.x * rotation.cos - convertedPosition.y * rotation.sin;
+	rotated.y = convertedPosition.x * rotation.sin + convertedPosition.y * rotation.cos;
+	convertedPosition.x = rotated.x + translation.x + position.x;
+	convertedPosition.y = rotated.y + translation.y + position.y;
+	activeRenderer->vertexBuffer->buffer->position = convertedPosition;  // Top Left.
+	activeRenderer->vertexBuffer->buffer->texture = V2(uv2.x, uv2.y);
+	activeRenderer->vertexBuffer->buffer->color = color;
+	activeRenderer->vertexBuffer->buffer->textureID = ts;
+	activeRenderer->vertexBuffer->buffer++;
+
+	convertedPosition = V3((halfSize.x), (halfSize.y), depth);
+	rotated.x = convertedPosition.x * rotation.cos - convertedPosition.y * rotation.sin;
+	rotated.y = convertedPosition.x * rotation.sin + convertedPosition.y * rotation.cos;
+	convertedPosition.x = rotated.x + translation.x + position.x;
+	convertedPosition.y = rotated.y + translation.y + position.y;
+	activeRenderer->vertexBuffer->buffer->position = convertedPosition;  // Top right.
+	activeRenderer->vertexBuffer->buffer->texture = V2(uv3.x, uv3.y);
+	activeRenderer->vertexBuffer->buffer->color = color;
+	activeRenderer->vertexBuffer->buffer->textureID = ts;
+	activeRenderer->vertexBuffer->buffer++;
+
+	convertedPosition = V3((halfSize.x), (halfSize.y), depth);
+	rotated.x = convertedPosition.x * rotation.cos - convertedPosition.y * rotation.sin;
+	rotated.y = convertedPosition.x * rotation.sin + convertedPosition.y * rotation.cos;
+	convertedPosition.x = rotated.x + translation.x + position.x;
+	convertedPosition.y = rotated.y + translation.y + position.y;
+	activeRenderer->vertexBuffer->buffer->position = convertedPosition;  // Top right.
+	activeRenderer->vertexBuffer->buffer->texture = V2(uv3.x, uv3.y);
+	activeRenderer->vertexBuffer->buffer->color = color;
+	activeRenderer->vertexBuffer->buffer->textureID = ts;
+	activeRenderer->vertexBuffer->buffer++;
+
+	convertedPosition = V3((halfSize.x), (-halfSize.y), depth);
+	rotated.x = convertedPosition.x * rotation.cos - convertedPosition.y * rotation.sin;
+	rotated.y = convertedPosition.x * rotation.sin + convertedPosition.y * rotation.cos;
+	convertedPosition.x = rotated.x + translation.x + position.x;
+	convertedPosition.y = rotated.y + translation.y + position.y;
+	activeRenderer->vertexBuffer->buffer->position = convertedPosition;  // Bottom right.
+	activeRenderer->vertexBuffer->buffer->texture = V2(uv4.x, uv4.y);
+	activeRenderer->vertexBuffer->buffer->color = color;
+	activeRenderer->vertexBuffer->buffer->textureID = ts;
+	activeRenderer->vertexBuffer->buffer++;
+
+	convertedPosition = V3((-halfSize.x), (-halfSize.y), depth);
+	rotated.x = convertedPosition.x * rotation.cos - convertedPosition.y * rotation.sin;
+	rotated.y = convertedPosition.x * rotation.sin + convertedPosition.y * rotation.cos;
+	convertedPosition.x = rotated.x + translation.x + position.x;
+	convertedPosition.y = rotated.y + translation.y + position.y;
+	activeRenderer->vertexBuffer->buffer->position = convertedPosition;// Bottom left.
+	activeRenderer->vertexBuffer->buffer->texture = V2(uv1.x, uv1.y);
+	activeRenderer->vertexBuffer->buffer->color = color;
+	activeRenderer->vertexBuffer->buffer->textureID = ts;
+	activeRenderer->vertexBuffer->buffer++;
+
+	activeRenderer->vertexBuffer->indexCount += 6;
+}
+
 static void 
 DrawQuad(vec2<float> position, vec2<float> size, unsigned int color, int textureId, vec2<float> uvBotLeft, vec2<float> uvSize)
 {
@@ -1304,7 +1428,7 @@ DrawTilemap(Tilemap* tilemap, vec2<float> tileSize, int textureId)
 }
 
 static void
-DrawCells(Tilemap* tilemap, TileCell* cells, vec2<float> tileSize, int textureId)
+DrawCells(Tilemap* tilemap, TileNeighbourMap* cells, vec2<float> tileSize, int textureId)
 {
 	float startX = 0.0f;
 	float startY = 0.0f;

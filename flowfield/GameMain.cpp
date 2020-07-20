@@ -1,13 +1,5 @@
 
 
-namespace Game
-{
-	bool running = true;
-	mat4x4 ortho = setOrthoFrustum(-640.0f, 640.0f, -360.0f, 360.0f, -100.0f, 100.0f);
-	vec2<float> windowSize;
-}
-
-
 static void
 GameResize(float newWidth, float newHeight)
 {
@@ -39,38 +31,41 @@ GameMain(Window window)
 	//InitializeShadowEdges((float)window.width, (float)window.height);
 
 
-	Shadow* shadow = CreateShadow(V2(0.0f, 0.0f), V3(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
+	Light* light = CreateLight(V2(0.0f, 0.0f), V3(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 		                                             static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 		                                             static_cast <float> (rand()) / static_cast <float> (RAND_MAX)),
-		Shadow::SHADOW_TYPE::POINT);
+		Light::LIGHT_TYPE::POINT);
 		//Shadow::SHADOW_TYPE::CONE);
 
 
-	world = new TileCell[tilemap.width * tilemap.height];
+	tileNeighbourMap = new TileNeighbourMap[tilemap.width * tilemap.height];
 	//populate the world with edges
 		//width 
 	for (int x = 1; x < (tilemap.width - 1); x++)
 	{
-		SetBit(&world[1 * tilemap.width + x].edge_exist_cell_exist, CELL_EXIST);
-		SetBit(&world[(tilemap.height - 2) * tilemap.width + x].edge_exist_cell_exist, CELL_EXIST);
+		SetBit(&tileNeighbourMap[1 * tilemap.width + x].edge_exist_cell_exist, CELL_EXIST);
+		SetBit(&tileNeighbourMap[(tilemap.height - 2) * tilemap.width + x].edge_exist_cell_exist, CELL_EXIST);
 	}
 
 	//height
 	for (int x = 1; x < (tilemap.height - 1 ); x++)
 	{
-		SetBit(&world[x * tilemap.width + 1].edge_exist_cell_exist, CELL_EXIST);
-		SetBit(&world[x * tilemap.width + (tilemap.width - 2)].edge_exist_cell_exist, CELL_EXIST);
+		SetBit(&tileNeighbourMap[x * tilemap.width + 1].edge_exist_cell_exist, CELL_EXIST);
+		SetBit(&tileNeighbourMap[x * tilemap.width + (tilemap.width - 2)].edge_exist_cell_exist, CELL_EXIST);
 	}
 
 	//world[37].exist = true;
 
 
 
-	vec2<float> player = V2(64.0f, -64.0f);
+	Player player;
+	InitializePlayer(&player, V2(64.0f, -64.0f));
+	//player.position = V2(64.0f, -64.0f);
+	//vec2<float> player = V2(64.0f, -64.0f);
 
 
 	//ConvertTileMapToPolyMap(0, 0, 20, 20, blockWidth, 20);
-	ConvertTileMapToPolyMap(0, 0, tilemap.width, tilemap.height, blockWidth, tilemap.width, player);
+	ConvertTileMapToPolyMap(0, 0, tilemap.width, tilemap.height, blockWidth, tilemap.width/*, player*/);
 	//CalculateVisibilityPolgyon(0.0f, 0.0f, 1000.0f);
 	CalculateVisibilityPolgyons(1000.0f);
 
@@ -80,23 +75,18 @@ GameMain(Window window)
 
 
 
+	LARGE_INTEGER PerfCountFrequencyResult;
+	QueryPerformanceFrequency(&PerfCountFrequencyResult);
+	__int64 PerfCountFrequency = PerfCountFrequencyResult.QuadPart;
 
+	LARGE_INTEGER LastCounter;
+	QueryPerformanceCounter(&LastCounter);
 	
 
 	Game::running = true;
 	while (Game::running) {
-		//TODO: extract this to a function
-		MSG msg;
-		while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) {
-			if (msg.message == WM_QUIT) {
-				Game::running = false;
-			}
-			else {
-
-				TranslateMessage(&msg);
-				DispatchMessageA(&msg);
-			}
-		}
+		//Windows messages
+		PeekMessages();
 
 
 		vec2<float> moveDelta = V2(0.0f, 0.0f);
@@ -109,71 +99,94 @@ GameMain(Window window)
 		if (keyState.currentKeyState['S'])
 			moveDelta.y = -0.5f;
 
-		CheckTileCollision(&player, moveDelta, &tilemap, V2(14.0f, 14.0f));
+		CheckTileCollision(&player.position, moveDelta, &tilemap, V2(14.0f, 14.0f));
+		UpdateCamera(&player);
 
-		vec2<float> camera = -player;
+		//vec2<float> camera = -player;
 
-		vec2<float> cursorPos = (V2(mouseState.x, mouseState.y) - (Game::windowSize * V2(0.5f, 0.5f))) + player;
+		vec2<float> cursorPos = (V2(mouseState.x, mouseState.y) - (Game::windowSize * V2(0.5f, 0.5f))) + player.position;
 	//	vec2<float> cursorPos = (V2(mouseState.x, mouseState.y) - (Game::windowSize * V2(0.5f, 0.5f))) + player;
 		if (MouseReleased(LEFT)) 
 		{
 			std::cout << "mouse released" << std::endl;
 			//vec2<float> cursorPos = V2(mouseState.x, mouseState.y) - (Game::windowSize * V2(0.5f, 0.5f)); //this is the actual cursor pos;
 			SetTileBit(&tilemap, cursorPos);
-			SetCell(&tilemap, world, cursorPos);
+			SetCell(&tilemap, tileNeighbourMap, cursorPos);
 
-			ConvertTileMapToPolyMap(0, 0, tilemap.width, tilemap.height, blockWidth, tilemap.width, player);
+			ConvertTileMapToPolyMap(0, 0, tilemap.width, tilemap.height, blockWidth, tilemap.width/*, player*/);
 
 			CalculateVisibilityPolgyons(1000.0f);
 		} 
 		if (MouseReleased(RIGHT))
 		{
-			shadow = CreateShadow(cursorPos - V2(-16.0f, 16.0f), V3(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
+			light = CreateLight(cursorPos - V2(-16.0f, 16.0f), V3(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 				                                                    static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 				                                                    static_cast <float> (rand()) / static_cast <float> (RAND_MAX)),
-				Shadow::SHADOW_TYPE::POINT);
+				Light::LIGHT_TYPE::POINT);
 		}
 		if (ScroolWheelUp())
 		{
-			shadow->shadowZPos += 1.0f;
+			light->lightZPos += 1.0f;
 		}
 		if (ScroolWheelDown())
 		{
-			shadow->shadowZPos -= 1.0f;		
+			light->lightZPos -= 1.0f;		
 		}
 
 		
-		UpdateShadowFrustum(player);
-		CalculateVisibilityPolgyons(shadow, 200.0f);
+		//UpdateShadowFrustum(player);
+		CalculateVisibilityPolgyons(light, 200.0f);
 		
 
 
+		//vec2<float> cursor = (V2(mouseState.x, mouseState.y) - (Game::windowSize * V2(0.5f, 0.5f))) + player.position;
+		vec2<float> direction = Normalize(cursorPos - player.position);
+		direction.y = -direction.y;
+		/*vec2<float> left = RotateVec(direction, 90.0);
+		vec2<float> right = RotateVec(direction, -90.0);
+		left = Normalize(left);
+		right = Normalize(right);*/
+
+		light->position = player.position - V2(-16.0f, 16.0f);
+		light->direction = Normalize(cursorPos - light->position);
+		light->direction = direction;
 
 
 
 
-		glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[OFF_SCREEN_CIRCLE_BUFFER].fbo);
+		//Draw the texture that shapes the shadowing
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[OFF_SCREEN_STENCIL_BUFFER].fbo);
 		glViewport(0, 0, window.width, window.height);
 		//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glDisable(GL_BLEND);
+		//glEnable(GL_BLEND);
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		//glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-		Bind(&shaders[CIRCLE_SHADER]);
+		Bind(&shaders[STENCIL_SHADER]);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textures[SHADOWMAP].ID);
 		Begin(&renderers[SHADOW_RENDERER]);
-		PushTransform(camera, -3.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
-		DrawCircle(cursorPos, 200.0f, GetColor(1.0f, 0.0f, 0.0f, 1.0f), 24);
+		//PushTransform(camera, -3.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+		//DrawCircle(cursorPos, 200.0f, GetColor(1.0f, 0.0f, 0.0f, 1.0f), 24);
+		//shadow map over player
+		float rotationOfShadowMap = atan2f(-direction.y, direction.x);
+		PushTransform(player.camera.position, -3.0f, V2(cosf(rotationOfShadowMap + DegreesToRadians(-90.0f)), sinf(rotationOfShadowMap + DegreesToRadians(-90.0f))));
+		DrawQuad2(player.position, V2(2000.0f, 2000.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), textures[SHADOWMAP].ID, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
 		PopTransform();
+		//PopTransform();
 		End();
 		Flush();
-		Unbind(&shaders[CIRCLE_SHADER]);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		Unbind(&shaders[STENCIL_SHADER]);
 
 
 
 
+		//Start doing all the regular rendering
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[OFF_SCREEN_COLOR_BUFFER].fbo);
 		glViewport(0, 0, window.width, window.height);
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -183,22 +196,16 @@ GameMain(Window window)
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		// Do OpenGL rendering here
-
-
-
-
 		Bind(&shaders[FORWARD_SHADER]);
 		Begin(&renderers[COLOR_RENDERER]);
 
-
-
 		//Cellmap
-		PushTransform(camera, -5.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
-		DrawCells(&tilemap, world, V2(32.0f, 32.0f), -1);
+		PushTransform(player.camera.position, -5.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+		DrawCells(&tilemap, tileNeighbourMap, V2(32.0f, 32.0f), -1);
 		PopTransform();
 
 		//Draw edges
-		PushTransform(camera, -4.5f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+		PushTransform(player.camera.position, -4.5f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
 		for (auto &e : edges) {
 			//Notice the 16.0f paddings
 			DrawLine(V2(e.start.x - 16.0f, -e.start.y + 16.0f), V2(e.end.x - 16.0f, -e.end.y + 16.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), 2.5f);
@@ -209,32 +216,10 @@ GameMain(Window window)
 		}
 		PopTransform();
 
-
-		vec2<float> cursor = (V2(mouseState.x, mouseState.y) - (Game::windowSize * V2(0.5f, 0.5f))) + player;
-		vec2<float> direction = Normalize(cursor - player);
-		direction.y = -direction.y;
-		vec2<float> left = RotateVec(direction, 90.0);
-		vec2<float> right = RotateVec(direction, -90.0);
-		left = Normalize(left);
-		right = Normalize(right);
-
-		shadow->position = player -V2(-16.0f, 16.0f);
-		shadow->direction = Normalize(cursor - shadow->position);
-		shadow->direction = direction;
-		
-
-
 		//player
-		PushTransform(camera, -4.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
-		DrawQuad(player, V2(32.0f, 32.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+		PushTransform(player.camera.position, -4.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+		DrawQuad(player.position, V2(32.0f, 32.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
 		PopTransform();
-		//shadow map over player
-		//vec2<float> testDirection = Normalize(cursor - )
-		float rotationOfShadowMap = atan2f(-direction.y, direction.x);
-		PushTransform(camera, -3.0f, V2( cosf(rotationOfShadowMap + DegreesToRadians(-90.0f)) , sinf(rotationOfShadowMap + DegreesToRadians(-90.0f)) ) );
-		DrawQuad(player, V2(2000.0f, 2000.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), textures[SHADOWMAP].ID, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
-		PopTransform();
-
 
 		End();
 		Flush();
@@ -268,14 +253,14 @@ GameMain(Window window)
 			std::cout << "after:" << err2 << std::endl;
 		}
 		//visibility polygonsd
-		PushTransform(camera, -2.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
-		if (shadow->visibilityPolygonPoints.size() > 0)
+		PushTransform(player.camera.position, -2.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+		if (light->visibilityPolygonPoints.size() > 0)
 		{
-			for (int i = 0; i < shadow->visibilityPolygonPoints.size() - 1; i++)
+			for (int i = 0; i < light->visibilityPolygonPoints.size() - 1; i++)
 			{
 
-				DrawLine(V2(shadow->position.x - 16.0f, shadow->position.y + 16.0f), V2(shadow->visibilityPolygonPoints[i].y - 16.0f, -shadow->visibilityPolygonPoints[i].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
-				DrawLine(V2(shadow->position.x - 16.0f, shadow->position.y + 16.0f), V2(shadow->visibilityPolygonPoints[i + 1].y - 16.0f, -shadow->visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
+				DrawLine(V2(light->position.x - 16.0f, light->position.y + 16.0f), V2(light->visibilityPolygonPoints[i].y - 16.0f, -light->visibilityPolygonPoints[i].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
+				DrawLine(V2(light->position.x - 16.0f, light->position.y + 16.0f), V2(light->visibilityPolygonPoints[i + 1].y - 16.0f, -light->visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
 			}
 		}
 		//DrawTriangle(V2(shadow->position.x - 16.0f, shadow->position.y + 16.0f), V2(shadow->visibilityPolygonPoints[shadow->visibilityPolygonPoints.size() - 1].y - 16.0f, -shadow->visibilityPolygonPoints[shadow->visibilityPolygonPoints.size() - 1].z + 16.0f), V2(shadow->visibilityPolygonPoints[0].y - 16.0f, -shadow->visibilityPolygonPoints[0].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
@@ -290,45 +275,45 @@ GameMain(Window window)
 
 
 		glActiveTexture(GL_TEXTURE4);
-		glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_CIRCLE_BUFFER].stencilTextureID);
+		glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_STENCIL_BUFFER].stencilTextureID);
 
 
 
 		float depthOffset = -2.0f;
-		for (unsigned int k = 0; k < shadows.numberOfActiveShadows; k++)
+		for (unsigned int k = 0; k < lights.numberOfActiveLights; k++)
 		{
 
 			Bind(&shaders[SHADOW_SHADER]);
 			Begin(&renderers[SHADOW_RENDERER]);
 
 
-			setUniform2f(&shaders[SHADOW_SHADER], "pos", shadows.shadows[k].position + V2(-16.0f, 16.0f) - player);
-			setUniform3f(&shaders[SHADOW_SHADER], "color1", shadows.shadows[k].color);
+			setUniform2f(&shaders[SHADOW_SHADER], "pos", lights.lights[k].position + V2(-16.0f, 16.0f) - player.position);
+			setUniform3f(&shaders[SHADOW_SHADER], "color1", lights.lights[k].color);
 			setUniform1i(&shaders[SHADOW_SHADER], "currentActiveOutput", 0);
-			setUniform1f(&shaders[SHADOW_SHADER], "lightZPosition", shadows.shadows[k].shadowZPos);
+			setUniform1f(&shaders[SHADOW_SHADER], "lightZPosition", lights.lights[k].lightZPos);
 			
 
-			if (shadows.shadows[k].type == Shadow::POINT) 
+			if (lights.lights[k].type == Light::POINT) 
 			{
-				setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestricted", 0);
-				PushTransform(camera, depthOffset, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+				setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestricted", 1); //this should be set by the light itself
+				PushTransform(player.camera.position, depthOffset, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
 				depthOffset += 0.1f;
-				if (shadows.shadows[k].visibilityPolygonPoints.size() > 0)
+				if (lights.lights[k].visibilityPolygonPoints.size() > 0)
 				{
-					for (int i = 0; i < shadows.shadows[k].visibilityPolygonPoints.size() - 1; i++)
+					for (int i = 0; i < lights.lights[k].visibilityPolygonPoints.size() - 1; i++)
 					{
 
-						DrawTriangle(V2(shadows.shadows[k].position.x - 16.0f, shadows.shadows[k].position.y + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[i].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i].z + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[i + 1].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
+						DrawTriangle(V2(lights.lights[k].position.x - 16.0f, lights.lights[k].position.y + 16.0f), V2(lights.lights[k].visibilityPolygonPoints[i].y - 16.0f, -lights.lights[k].visibilityPolygonPoints[i].z + 16.0f), V2(lights.lights[k].visibilityPolygonPoints[i + 1].y - 16.0f, -lights.lights[k].visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
 						
 					}
 				}
 
 
-				DrawTriangle(V2(shadows.shadows[k].position.x - 16.0f, shadows.shadows[k].position.y + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[shadows.shadows[k].visibilityPolygonPoints.size() - 1].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[shadows.shadows[k].visibilityPolygonPoints.size() - 1].z + 16.0f), V2(shadows.shadows[k].visibilityPolygonPoints[0].y - 16.0f, -shadows.shadows[k].visibilityPolygonPoints[0].z + 16.0f), GetColor(0.5f, 1.0f, 0.5f, 1.0f));
+				DrawTriangle(V2(lights.lights[k].position.x - 16.0f, lights.lights[k].position.y + 16.0f), V2(lights.lights[k].visibilityPolygonPoints[lights.lights[k].visibilityPolygonPoints.size() - 1].y - 16.0f, -lights.lights[k].visibilityPolygonPoints[lights.lights[k].visibilityPolygonPoints.size() - 1].z + 16.0f), V2(lights.lights[k].visibilityPolygonPoints[0].y - 16.0f, -lights.lights[k].visibilityPolygonPoints[0].z + 16.0f), GetColor(0.5f, 1.0f, 0.5f, 1.0f));
 			
 				PopTransform();
 			} 
-			else if (shadows.shadows[k].type == Shadow::CONE) 
+		/*	else if (shadows.shadows[k].type == Shadow::CONE) 
 			{
 
 
@@ -378,14 +363,14 @@ GameMain(Window window)
 
 
 				//draw 
-			}
+			}*/
 			
 
 			End();
 			Flush();
 
 
-			if (shadows.shadows[k].type == Shadow::CONE) 
+			if (lights.lights[k].type == Light::CONE) 
 			{
 				
 
@@ -423,7 +408,7 @@ GameMain(Window window)
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_SHADOW_BUFFER].stencilTextureID);
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_CIRCLE_BUFFER].stencilTextureID);
+		glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_STENCIL_BUFFER].stencilTextureID);
 
 		setUniform1i(&shaders[QUAD_SHADER], "shouldLightBeRestricted", 0);
 
@@ -458,6 +443,20 @@ GameMain(Window window)
 		ClearInput(); //TODO: remove this
 
 		SwapBuffers(window.gldc);
+
+
+		LARGE_INTEGER EndCounter;
+		QueryPerformanceCounter(&EndCounter);
+
+		__int64 CounterElapsed = EndCounter.QuadPart - LastCounter.QuadPart;
+
+		__int32 MSPerFrame = (__int32)(((1000 * CounterElapsed) / PerfCountFrequency));
+		__int32 FPS = PerfCountFrequency / CounterElapsed;
+
+		std::cout << "FPS: "<< FPS << std::endl;
+
+
+		LastCounter = EndCounter;
 	}
 
 
