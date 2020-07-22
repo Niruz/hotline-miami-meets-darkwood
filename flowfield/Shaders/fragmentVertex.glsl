@@ -23,6 +23,7 @@ void main()
 		int tid = int(fs_in.tid - 0.5);
 		texColor = fs_in.col *texture(textureArray[tid],fs_in.texCoords);
 		texColor = texColor.xyzw;
+		//texColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	//	texColor = vec4(1.0f,1.0f,1.0f,1.0f);
 
 	}

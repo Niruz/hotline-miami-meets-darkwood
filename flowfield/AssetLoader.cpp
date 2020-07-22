@@ -57,5 +57,10 @@ LoadAssets(Window* window)
 		return 0;
 	}
 
+	if (!LoadTexture("Textures/player_run_strip6.png", PLAYER_RUN))
+	{
+		return 0;
+	}
+
 	return 1;
 }

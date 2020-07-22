@@ -152,6 +152,7 @@
     </None>
     <None Include="AssetLoader.cpp" />
     <None Include="BinaryHeap.cpp" />
+    <None Include="Animation.cpp" />
     <ClCompile Include="Build.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>

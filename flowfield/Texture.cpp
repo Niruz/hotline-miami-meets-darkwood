@@ -4,6 +4,7 @@ enum TEXTURES
 {
 	TEST1,
 	SHADOWMAP,
+	PLAYER_RUN,
 	MAX_TEXTURES
 };
 
@@ -121,6 +122,8 @@ LoadTexture(std::string filename, TEXTURES identifier)
 
 	int width, height, nrChannels;
 	unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrChannels, 0);
+	if (data == nullptr)
+		return false;
 
 	Initialize(&textures[identifier], GL_RGBA, GL_RGBA, GL_REPEAT, GL_REPEAT, GL_NEAREST, GL_NEAREST);
 	//Initialize(&textures[identifier], GL_RGBA, GL_BGRA, GL_REPEAT, GL_REPEAT, GL_NEAREST, GL_NEAREST);

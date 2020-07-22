@@ -21,6 +21,7 @@ struct TileNeighbourMap
 
 TileNeighbourMap* tileNeighbourMap;// = new Cell[20 * 20];
 std::vector<Edge> edges;
+std::vector<Edge> doorEdges;
 
 
 struct Light
@@ -54,21 +55,21 @@ struct Lights
 	Light lights[MAX_LIGHTS];
 };
 
-Lights lights;
+
 
 static Light* 
-CreateLight(vec2<float> position, vec3<float> color, Light::LIGHT_TYPE type) 
+CreateLight(Lights* lights, vec2<float> position, vec3<float> color, Light::LIGHT_TYPE type) 
 {
-	if (lights.numberOfActiveLights == lights.MAX_LIGHTS)
+	if (lights->numberOfActiveLights == lights->MAX_LIGHTS)
 		return nullptr;
 
-	lights.numberOfActiveLights++;
+	lights->numberOfActiveLights++;
 
-	lights.lights[lights.numberOfActiveLights - 1].position = position;
-	lights.lights[lights.numberOfActiveLights - 1].color = color;
-	lights.lights[lights.numberOfActiveLights - 1].type = type;
-	lights.lights[lights.numberOfActiveLights - 1].position = V2(0.0f, 0.0f);
-	return &lights.lights[lights.numberOfActiveLights - 1];
+	lights->lights[lights->numberOfActiveLights - 1].position = position;
+	lights->lights[lights->numberOfActiveLights - 1].color = color;
+	lights->lights[lights->numberOfActiveLights - 1].type = type;
+	lights->lights[lights->numberOfActiveLights - 1].position = V2(0.0f, 0.0f);
+	return &lights->lights[lights->numberOfActiveLights - 1];
 }
 
 
@@ -330,6 +331,12 @@ ConvertTileMapToPolyMap(int sx, int sy, int w, int h, float blockWidth, int pitc
 			newEdge.end   = frustum.worldEdges[i].end + camera;
 			edges.push_back(newEdge);
 		}*/
+
+		//we might only need to do this for  the main player light...
+		for (unsigned int i = 0; i < doorEdges.size(); i++)
+		{
+			edges.push_back(doorEdges[i]);
+		}
 }
 
 static float
@@ -1008,14 +1015,14 @@ CalculateVisibilityPolgyons(Light* light, float radius)
 }
 
 static void
-CalculateVisibilityPolgyons(float radius)
+CalculateVisibilityPolgyons(float radius, Lights* lights)
 {
-	for (unsigned int k = 0; k < lights.numberOfActiveLights; k++) 
+	for (unsigned int k = 0; k < lights->numberOfActiveLights; k++) 
 	{
-		if (lights.lights[k].type == Light::LIGHT_TYPE::POINT)
-			CalculatePointLight(&lights.lights[k], radius);
+		if (lights->lights[k].type == Light::LIGHT_TYPE::POINT)
+			CalculatePointLight(&lights->lights[k], radius);
 		else
-			CalculateConeLight(&lights.lights[k], radius);
+			CalculateConeLight(&lights->lights[k], radius);
 
 	}
 

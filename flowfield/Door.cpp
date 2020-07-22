@@ -21,8 +21,54 @@ struct Door
 	float angularAcceleration = 0.0f;
 	float rotationDegrees = 0.0f;
 	bool active = false;
+	std::vector<vec2<float>> collisionPoints;
+	bool collidedThisFrame = false;
+	Edge edge; //used for the shadowing
 };
 
+//returns the index where this door lies in the map
+static void
+AddDoorEdges(Door* door)
+{
+	doorEdges.push_back(door->edge);
+}
+
+//called from physics
+static void
+UpdateDoorEdges(Door* door, int index)
+{
+	doorEdges[index] = door->edge;
+}
+
+//called before rendering
+static void
+RefreshDoorEdges()
+{
+	//3 + 2
+	int startIndex = edges.size() - doorEdges.size();
+
+	int otherIndex = 0;
+	for (int i = startIndex; i < edges.size(); i++)
+	{
+		edges[i] = doorEdges[otherIndex];
+		otherIndex++;
+	}
+}
+
+static void
+UpdateEdge(Door* door, vec2<float> camera)
+{
+	vec2<float> start = (door->vertices[0] + door->vertices[1]) / 2.0f;
+	vec2<float> end = (door->vertices[2] + door->vertices[3]) / 2.0f;
+	//	start = start + fakeCamera;
+	//	end = end + fakeCamera;
+	start.y = -start.y;
+	end.y = -end.y;
+	start = start + V2(16.0f, 16.0f);
+	end = end + V2(16.0f, 16.0f);
+	Edge edge = EDGE(start, end);
+	door->edge = edge;
+}
 
 static void
 InitializeDoor(Door* door, vec2<float> position) 

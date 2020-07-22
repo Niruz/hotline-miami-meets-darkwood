@@ -1138,6 +1138,7 @@ DrawQuad(vec2<float> position, vec2<float> size, unsigned int color, int texture
 	vec2<float> uv3 = V2(uvBotLeft.x + uvSize.x, uvBotLeft.y);
 	vec2<float> uv4 = V2(uvBotLeft.x + uvSize.x, uvBotLeft.y + uvSize.y);
 
+
 	Transform transform = *activeRenderer->transformationStack.transformationStackBack;
 	const vec2<float>& translation = transform.position;
 	const vec2<float>& rotation = transform.rotation;
@@ -1148,6 +1149,113 @@ DrawQuad(vec2<float> position, vec2<float> size, unsigned int color, int texture
 
 	//x = x * rotation.cos + y * (-1.0f*rotation.sin);
 	//y = y * rotation.sin + y * rotation.cos;
+
+	vec2<float> rotated;
+
+	vec3<float> convertedPosition = V3((-halfSize.x), (-halfSize.y), depth);
+	rotated.x = convertedPosition.x * rotation.cos - convertedPosition.y * rotation.sin;
+	rotated.y = convertedPosition.x * rotation.sin + convertedPosition.y * rotation.cos;
+	convertedPosition.x = rotated.x + translation.x + position.x;
+	convertedPosition.y = rotated.y + translation.y + position.y;
+	activeRenderer->vertexBuffer->buffer->position = convertedPosition;// Bottom left.
+	activeRenderer->vertexBuffer->buffer->texture = V2(uv1.x, uv1.y);
+	activeRenderer->vertexBuffer->buffer->color = color;
+	activeRenderer->vertexBuffer->buffer->textureID = ts;
+	activeRenderer->vertexBuffer->buffer++;
+
+	convertedPosition = V3((-halfSize.x), (halfSize.y), depth);
+	rotated.x = convertedPosition.x * rotation.cos - convertedPosition.y * rotation.sin;
+	rotated.y = convertedPosition.x * rotation.sin + convertedPosition.y * rotation.cos;
+	convertedPosition.x = rotated.x + translation.x + position.x;
+	convertedPosition.y = rotated.y + translation.y + position.y;
+	activeRenderer->vertexBuffer->buffer->position = convertedPosition;  // Top Left.
+	activeRenderer->vertexBuffer->buffer->texture = V2(uv2.x, uv2.y);
+	activeRenderer->vertexBuffer->buffer->color = color;
+	activeRenderer->vertexBuffer->buffer->textureID = ts;
+	activeRenderer->vertexBuffer->buffer++;
+
+	convertedPosition = V3((halfSize.x), (halfSize.y), depth);
+	rotated.x = convertedPosition.x * rotation.cos - convertedPosition.y * rotation.sin;
+	rotated.y = convertedPosition.x * rotation.sin + convertedPosition.y * rotation.cos;
+	convertedPosition.x = rotated.x + translation.x + position.x;
+	convertedPosition.y = rotated.y + translation.y + position.y;
+	activeRenderer->vertexBuffer->buffer->position = convertedPosition;  // Top right.
+	activeRenderer->vertexBuffer->buffer->texture = V2(uv3.x, uv3.y);
+	activeRenderer->vertexBuffer->buffer->color = color;
+	activeRenderer->vertexBuffer->buffer->textureID = ts;
+	activeRenderer->vertexBuffer->buffer++;
+
+	convertedPosition = V3((halfSize.x), (-halfSize.y), depth);
+	rotated.x = convertedPosition.x * rotation.cos - convertedPosition.y * rotation.sin;
+	rotated.y = convertedPosition.x * rotation.sin + convertedPosition.y * rotation.cos;
+	convertedPosition.x = rotated.x + translation.x + position.x;
+	convertedPosition.y = rotated.y + translation.y + position.y;
+	activeRenderer->vertexBuffer->buffer->position = convertedPosition;  // Bottom right.
+	activeRenderer->vertexBuffer->buffer->texture = V2(uv4.x, uv4.y);
+	activeRenderer->vertexBuffer->buffer->color = color;
+	activeRenderer->vertexBuffer->buffer->textureID = ts;
+	activeRenderer->vertexBuffer->buffer++;
+
+	activeRenderer->vertexBuffer->indexCount += 6;
+}
+
+static void
+DrawQuadAnim(vec2<float> position, vec2<float> size, Animation* animation)
+{
+	const int tid = animation->textureId;
+
+	float ts = 0.0f;
+	if (tid > 0)
+	{
+		bool found = false;
+		for (int i = 0; i < activeRenderer->textureSlots.size(); i++)
+		{
+			if (activeRenderer->textureSlots[i] == tid)
+			{
+				ts = (float)(i + 1);
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
+		{
+			//This needs to be done if we run out of texture slots
+			if (activeRenderer->textureSlots.size() >= RENDERER_MAX_TEXTURES)
+			{
+				End();
+				Flush();
+				Begin(activeRenderer);
+				//myTextureSlots.clear();
+			}
+			activeRenderer->textureSlots.push_back(tid);
+			ts = (float)(activeRenderer->textureSlots.size());
+		}
+	}
+
+	vec2<float> halfSize = V2(size.x * 0.5f, size.y * 0.5f);
+
+	const vec2<float>& uvBotLeft = animation->uv2;
+	const vec2<float>& uvSize = animation->uvSize;
+	//vec2<float> uvBotLeft = V2(0.0f, 0.0f);
+	//vec2<float> uvSize = V2(1.0f, 1.0f);
+
+	vec2<float> uv1 = V2(uvBotLeft.x, uvBotLeft.y + uvSize.y);
+	vec2<float> uv2 = uvBotLeft;
+	vec2<float> uv3 = V2(uvBotLeft.x + uvSize.x, uvBotLeft.y);
+	vec2<float> uv4 = V2(uvBotLeft.x + uvSize.x, uvBotLeft.y + uvSize.y);
+
+	Transform transform = *activeRenderer->transformationStack.transformationStackBack;
+	const vec2<float>& translation = transform.position;
+	const vec2<float>& rotation = transform.rotation;
+	const float& depth = transform.depth;
+
+	//x = x * rotation.cos + y * (-1.0f*rotation.sin);
+	//y = y * rotation.sin + y * rotation.cos;
+
+	//x = x * rotation.cos + y * (-1.0f*rotation.sin);
+	//y = y * rotation.sin + y * rotation.cos;
+	unsigned int color = GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f));
 
 	vec2<float> rotated;
 
@@ -1537,10 +1645,277 @@ DrawFlowField(DjikstraGrid* djikstraGrid)
 	}
 }
 
+#define DRAW_DEBUG_DATA false
+static void
+RenderLevel(Level* level, Window window)
+{
+	GLenum err2;
+	while ((err2 = glGetError()) != GL_NO_ERROR)
+	{
+		std::cout << "RenderLevel start: " << err2 << std::endl;
+	}
+	//First we loop through the door to check if any of them is active, in that case we need to update the shadowing
+	for (unsigned int i = 0; i < 2; i++)
+	{
+		if (level->doors[i].active)
+		{
+			RefreshDoorEdges();
+			//uncomment this to calculate all of them
+			CalculateVisibilityPolgyons(1000.0f, &level->lights);
+			break;
+		}
+	}
+	//Remember: this is the light on the player, not all lights, they only need to be updated if a tile is placed or a door is rotated
+	CalculateVisibilityPolgyons(level->player.light, 200.0f);
+
+	level->player.light->position = level->player.position - V2(-16.0f, 16.0f);
+	level->player.light->direction = Normalize(level->cursorPos - level->player.light->position);
+	level->player.light->direction = level->directionToCursor;
+
+	//Draw the texture that shapes the shadowing
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[OFF_SCREEN_STENCIL_BUFFER].fbo);
+	glViewport(0, 0, window.width, window.height);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+
+	Bind(&shaders[STENCIL_SHADER]);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textures[SHADOWMAP].ID);
+	Begin(&renderers[SHADOW_RENDERER]);
+
+	//shadow map over player
+	float rotationOfShadowMap = atan2f(-level->directionToCursor.y, level->directionToCursor.x);
+	PushTransform(level->player.camera.position, -3.0f, V2(cosf(rotationOfShadowMap + DegreesToRadians(-90.0f)), sinf(rotationOfShadowMap + DegreesToRadians(-90.0f))));
+	DrawQuad2(level->player.position, V2(2000.0f, 2000.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), textures[SHADOWMAP].ID, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+	PopTransform();
+
+	End();
+	Flush();
+	glBindTexture(GL_TEXTURE_2D, 0);
+	Unbind(&shaders[STENCIL_SHADER]);
+
+	//Start doing all the regular rendering
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[OFF_SCREEN_COLOR_BUFFER].fbo);
+	glViewport(0, 0, window.width, window.height);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// Do OpenGL rendering here
+	Bind(&shaders[FORWARD_SHADER]);
+	Begin(&renderers[COLOR_RENDERER]);
+
+	//Cellmap
+	PushTransform(level->player.camera.position, -5.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+	DrawCells(&level->tilemap, tileNeighbourMap, V2(32.0f, 32.0f), -1);
+	PopTransform();
+
+	//Draw edges
+	PushTransform(level->player.camera.position, -4.5f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+	for (auto &e : edges) {
+		//Notice the 16.0f paddings
+		DrawLine(V2(e.start.x - 16.0f, -e.start.y + 16.0f), V2(e.end.x - 16.0f, -e.end.y + 16.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), 2.5f);
+		PushTransform(V2(0.0f, 0.0f), 0.1f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+		DrawQuad(V2(e.start.x - 16.0f, -e.start.y + 16.0f), V2(5.0f, 5.0f), GetColor(V4(1.0f, 0.0f, 0.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+		DrawQuad(V2(e.end.x - 16.0f, -e.end.y + 16.0f), V2(5.0f, 5.0f), GetColor(V4(1.0f, 0.0f, 0.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+		PopTransform();
+	}
+	PopTransform();
+
+	//player
+	PushTransform(level->player.camera.position, -4.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+	//DrawQuad(level->player.position, V2(132.0f, 132.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), textures[PLAYER_RUN].ID, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+	//DrawQuad(level->player.position, V2(32.0f, 32.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+	DrawQuadAnim(level->player.position, V2(80.0f, 87.0f), &level->player.animation);
+	PopTransform();
+
+
+	//Pathstack
+#if DRAW_DEBUG_DATA
+	vec2<int> playerTilePos = WorldToTileCoordinates(&level->tilemap, level->player.position);
+	level->pathClear = IsPathToTargetClear(&level->tilemap, V2(1, 4), playerTilePos, &level->losPathStack);
+	PushTransform(level->player.camera.position, -2.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+	for (int i = 0; i < level->losPathStack.capacity; i++)
+	{
+		DrawQuad(V2(level->losPathStack.arr[i].x * 32.0f, level->losPathStack.arr[i].y * -32.0f), V2(30.0f, 30.0f), GetColor(V4(1.0f, 0.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+	}
+	PopTransform();
+#endif
+	//Ai
+	PushTransform(level->player.camera.position, -1.5f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+	for (unsigned int i = 0; i < level->ais.currentNumberOfAis; i++)
+	{
+		DrawQuad(level->ais.ais[i].position, V2(30.0f, 30.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+	}
+	PopTransform();
+	//Doors
+
+	PushTransform(level->player.camera.position, -1.5f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+	for (unsigned int i = 0; i < 2; i++)
+	{
+
+#if DRAW_DEBUG_DATA
+		//Draw the normals
+		vec2<float> up = Normalize(level->doors[i].vertices[2] - level->doors[i].vertices[1]);
+		up = V2(-up.y, up.x);
+		vec2<float> right = Normalize(level->doors[i].vertices[3] - level->doors[i].vertices[2]);
+		right = V2(-right.y, right.x);
+		vec2<float> bottom = Normalize(level->doors[i].vertices[0] - level->doors[i].vertices[3]);
+		bottom = V2(-bottom.y, bottom.x);
+		vec2<float> left = Normalize(level->doors[i].vertices[1] - level->doors[i].vertices[0]);
+		left = V2(-left.y, left.x);
+
+		DrawLine(level->doors[i].relativePosition, level->doors[i].relativePosition + (up * 64.0f), GetColor(1.0f, 0.0f, 0.0f, 1.0f), 3.0f);
+		DrawLine(level->doors[i].relativePosition, level->doors[i].relativePosition + (right * 64.0f), GetColor(0.0f, 1.0f, 0.0f, 1.0f), 3.0f);
+		DrawLine(level->doors[i].relativePosition, level->doors[i].relativePosition + (bottom * 64.0f), GetColor(0.0f, 0.0f, 1.0f, 1.0f), 3.0f);
+		DrawLine(level->doors[i].relativePosition, level->doors[i].relativePosition + (left * 64.0f), GetColor(1.0f, 1.0f, 1.0f, 1.0f), 3.0f);
+
+
+		for (unsigned int k = 0; k < level->doors[i].collisionPoints.size(); k++)
+		{
+			DrawQuad(level->doors[i].collisionPoints[k], V2(8.0f, 8.0f), GetColor(V4(1.0f, 1.0f, 0.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+		}
+#endif
+		//	need to rotate around the origin for htis to work
+		DrawDoor(&level->doors[i], level->doors[i].collidedThisFrame);
+	}
+	PopTransform();
+
+	End();
+	Flush();
+	Unbind(&shaders[FORWARD_SHADER]);
+
+
+
+
+
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[OFF_SCREEN_SHADOW_BUFFER].fbo);
+	glViewport(0, 0, window.width, window.height);
+	//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+	vec3<float> lightColors[2] = { V3(1.0f, 0.0f, 0.0f), V3(0.0f, 0.0f, 1.0f) };
+
+#if DRAW_DEBUG_DATA
+	//visibility polygonsd
+	PushTransform(level->player.camera.position, -2.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+	if (level->player.light->visibilityPolygonPoints.size() > 0)
+	{
+		for (int i = 0; i < level->player.light->visibilityPolygonPoints.size() - 1; i++)
+		{
+
+			DrawLine(V2(level->player.light->position.x - 16.0f, level->player.light->position.y + 16.0f), V2(level->player.light->visibilityPolygonPoints[i].y - 16.0f, -level->player.light->visibilityPolygonPoints[i].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
+			DrawLine(V2(level->player.light->position.x - 16.0f, level->player.light->position.y + 16.0f), V2(level->player.light->visibilityPolygonPoints[i + 1].y - 16.0f, -level->player.light->visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
+		}
+	}
+	//DrawTriangle(V2(shadow->position.x - 16.0f, shadow->position.y + 16.0f), V2(shadow->visibilityPolygonPoints[shadow->visibilityPolygonPoints.size() - 1].y - 16.0f, -shadow->visibilityPolygonPoints[shadow->visibilityPolygonPoints.size() - 1].z + 16.0f), V2(shadow->visibilityPolygonPoints[0].y - 16.0f, -shadow->visibilityPolygonPoints[0].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
+	PopTransform();
+#endif
+
+	GLenum er3r;
+	while ((er3r = glGetError()) != GL_NO_ERROR)
+	{
+		std::cout << "GameMain before shadow:" << er3r << std::endl;
+	}
+
+
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_STENCIL_BUFFER].stencilTextureID);
+
+
+
+	//Draw all lights
+	float depthOffset = -2.0f;
+	for (unsigned int k = 0; k < level->lights.numberOfActiveLights; k++)
+	{
+
+		Bind(&shaders[SHADOW_SHADER]);
+		Begin(&renderers[SHADOW_RENDERER]);
+
+
+		setUniform2f(&shaders[SHADOW_SHADER], "pos", level->lights.lights[k].position + V2(-16.0f, 16.0f) - level->player.position);
+		setUniform3f(&shaders[SHADOW_SHADER], "color1", level->lights.lights[k].color);
+		setUniform1i(&shaders[SHADOW_SHADER], "currentActiveOutput", 0);
+		setUniform1f(&shaders[SHADOW_SHADER], "lightZPosition", level->lights.lights[k].lightZPos);
+
+
+		if (level->lights.lights[k].type == Light::POINT)
+		{
+			//this should be set by the light itself
+			k == level->lights.numberOfActiveLights - 1 ? setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestricted", 0) : setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestricted", 0);
+			PushTransform(level->player.camera.position, depthOffset, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+			depthOffset += 0.1f;
+			if (level->lights.lights[k].visibilityPolygonPoints.size() > 0)
+			{
+				for (int i = 0; i < level->lights.lights[k].visibilityPolygonPoints.size() - 1; i++)
+				{
+
+					DrawTriangle(V2(level->lights.lights[k].position.x - 16.0f, level->lights.lights[k].position.y + 16.0f), V2(level->lights.lights[k].visibilityPolygonPoints[i].y - 16.0f, -level->lights.lights[k].visibilityPolygonPoints[i].z + 16.0f), V2(level->lights.lights[k].visibilityPolygonPoints[i + 1].y - 16.0f, -level->lights.lights[k].visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
+
+				}
+			}
+
+
+			DrawTriangle(V2(level->lights.lights[k].position.x - 16.0f, level->lights.lights[k].position.y + 16.0f), V2(level->lights.lights[k].visibilityPolygonPoints[level->lights.lights[k].visibilityPolygonPoints.size() - 1].y - 16.0f, -level->lights.lights[k].visibilityPolygonPoints[level->lights.lights[k].visibilityPolygonPoints.size() - 1].z + 16.0f), V2(level->lights.lights[k].visibilityPolygonPoints[0].y - 16.0f, -level->lights.lights[k].visibilityPolygonPoints[0].z + 16.0f), GetColor(0.5f, 1.0f, 0.5f, 1.0f));
+
+			PopTransform();
+		}
+		End();
+		Flush();
+		Unbind(&shaders[SHADOW_SHADER]);
+	}
+	//glBindTexture(GL_TEXTURE_2D, 0);
+
+	//Draw the final combined image to the screen
+	Bind(&shaders[QUAD_SHADER]);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, window.width, window.height);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+
+	glBindVertexArray(ndcQuads[REGULAR_PASS].vao);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_COLOR_BUFFER].textureIDs[0]);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_SHADOW_BUFFER].textureIDs[0]);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_SHADOW_BUFFER].stencilTextureID);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_STENCIL_BUFFER].stencilTextureID);
+
+	setUniform1i(&shaders[QUAD_SHADER], "shouldLightBeRestricted", 0);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindVertexArray(0);
+
+	setUniform1i(&shaders[QUAD_SHADER], "shouldLightBeRestricted", 0);
+
+	glEnable(GL_DEPTH_TEST);
+	Unbind(&shaders[QUAD_SHADER]);
+
+	GLenum err;
+	while ((err = glGetError()) != GL_NO_ERROR)
+	{
+		std::cout << "RenderLevel End:" << err << std::endl;
+	}
+}
+
 static void 
 ResizeGL(int width, int height) 
 {
 	//TODO: IMPLEMENT - keep aspect ratio you noob :)
 }
-
-

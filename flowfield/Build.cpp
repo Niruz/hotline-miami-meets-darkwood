@@ -33,6 +33,7 @@
 
 #include "Font.cpp"
 #include "Texture.cpp"
+#include "Animation.cpp"
 #include "IndexBuffer.cpp"
 #include "Shader.cpp"
 #include "AssetLoader.cpp"
@@ -41,13 +42,15 @@
 #include "Shadow.cpp"
 #include "Agent.cpp"
 #include "Door.cpp"
+
+#include "GameGlobals.cpp"
 #include "Level.cpp"
 #include "GLRenderer.cpp"
 
 #include "BinaryHeap.cpp"
 #include "Pathfinding.cpp"
 
-#include "GameGlobals.cpp"
+
 #include "PeekMessage.cpp"
 #include "Physics.cpp"
 #include "GameMain.cpp"
