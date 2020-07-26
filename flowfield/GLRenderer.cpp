@@ -1513,10 +1513,10 @@ DrawTilemap(Tilemap* tilemap, vec2<float> tileSize, int textureId)
 		if (i > 0 && i % tilemap->width == 0)
 		{
 			startX = 0.0f;
-			startY -= 32.0f;
+			startY -= Game::tileFullWidth.y;
 		}
 		vec2<float> pos; pos.x = startX; pos.y = startY;
-		vec2<float> size; size.x = 30.0f; size.y = 30.0f;
+		vec2<float> size; size.x = Game::tileFullWidth.x - 2.0f; size.y = Game::tileFullWidth.y - 2.0f;
 		vec4<float> col;
 
 		if (TestBit(tilemap->tilemap, i))
@@ -1531,7 +1531,7 @@ DrawTilemap(Tilemap* tilemap, vec2<float> tileSize, int textureId)
 		unsigned int color = GetColor(col);
 
 		DrawQuad(V2(startX, startY), size, color, textureId, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
-		startX += 32.0f;
+		startX += Game::tileFullWidth.x;
 	}
 }
 
@@ -1546,10 +1546,10 @@ DrawCells(Tilemap* tilemap, TileNeighbourMap* cells, vec2<float> tileSize, int t
 		if (i > 0 && i % tilemap->width == 0)
 		{
 			startX = 0.0f;
-			startY -= 32.0f;
+			startY -= Game::tileFullWidth.y;
 		}
 		vec2<float> pos; pos.x = startX; pos.y = startY;
-		vec2<float> size; size.x = 30.0f; size.y = 30.0f;
+		vec2<float> size; size.x = Game::tileFullWidth.x - 2.0f; size.y = Game::tileFullWidth.y - 2.0f;
 		vec4<float> col;
 
 
@@ -1561,7 +1561,7 @@ DrawCells(Tilemap* tilemap, TileNeighbourMap* cells, vec2<float> tileSize, int t
 			col.x = 0.1f; col.y = 0.1f; col.z = 0.1f, col.w = 1.0f;
 		}
 		DrawQuad(V2(startX, startY), size, GetColor(col), textureId, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
-		startX += 32.0f;
+		startX += Game::tileFullWidth.x;
 
 		/*if (TestBit(tilemap->tilemap, i))
 		{
@@ -1584,16 +1584,16 @@ DrawDjikstraGrid(DjikstraGrid* djikstraGrid)
 {
 	float startX = 0.0f;
 	float startY = 0.0f;
-	vec2<float> size = V2(31.0f, 31.0f);
+	vec2<float> size = V2(Game::tileFullWidth.x - 1.0f, Game::tileFullWidth.y - 1.0f);
 	for (unsigned int i = 0; i < djikstraGrid->width*djikstraGrid->height; i++)
 	{
 		if (i > 0 && i % djikstraGrid->width == 0)
 		{
 			startX = 0.0f;
-			startY -= 32.0f;
+			startY -= Game::tileFullWidth.y;
 		}
 		vec2<float> pos; pos.x = startX; pos.y = startY;
-		vec2<float> size; size.x = 30.0f; size.y = 30.0f;
+		vec2<float> size; size.x = Game::tileFullWidth.x - 2.0f; size.y = Game::tileFullWidth.y - 2.0f;
 		vec4<float> col = V4(1.0f, 1.0f, 1.0f, 1.0f);
 
 
@@ -1613,7 +1613,7 @@ DrawDjikstraGrid(DjikstraGrid* djikstraGrid)
 		}
 		
 	
-		startX += 32.0f;
+		startX += Game::tileFullWidth.x;
 	}
 }
 
@@ -1623,7 +1623,7 @@ DrawFlowField(DjikstraGrid* djikstraGrid)
 {
 	float startX = 0.0f;
 	float startY = 0.0f;
-	vec2<float> size = V2(31.0f, 31.0f);
+	vec2<float> size = V2(Game::tileFullWidth.x - 1.0f, Game::tileFullWidth.y - 1.0f);
 	for (unsigned int i = 0; i < djikstraGrid->width*djikstraGrid->height; i++)
 	{
 		if (i > 0 && i % djikstraGrid->width == 0)
@@ -1632,7 +1632,7 @@ DrawFlowField(DjikstraGrid* djikstraGrid)
 			startY -= 32.0f;
 		}
 		vec2<float> pos; pos.x = startX; pos.y = startY;
-		vec2<float> size; size.x = 30.0f; size.y = 30.0f;
+		vec2<float> size; size.x = Game::tileFullWidth.x - 2.0f; size.y = Game::tileFullWidth.y - 2.0f;
 		vec4<float> col = V4(1.0f, 1.0f, 0.0f, 1.0f);
 
 
@@ -1641,7 +1641,7 @@ DrawFlowField(DjikstraGrid* djikstraGrid)
 		DrawLine(pos, end, GetColor(0.0f, 0.0f, 1.0f, 1.0f), 3.0f);
 		PopTransform();
 
-		startX += 32.0f;
+		startX += Game::tileFullWidth.x;
 	}
 }
 
@@ -1668,7 +1668,7 @@ RenderLevel(Level* level, Window window)
 	//Remember: this is the light on the player, not all lights, they only need to be updated if a tile is placed or a door is rotated
 	CalculateVisibilityPolgyons(level->player.light, 200.0f);
 
-	level->player.light->position = level->player.position - V2(-16.0f, 16.0f);
+	level->player.light->position = level->player.position - V2(-Game::tileHalfWidth.x, Game::tileHalfWidth.y);
 	level->player.light->direction = Normalize(level->cursorPos - level->player.light->position);
 	level->player.light->direction = level->shadowDirectionToCursor;
 
@@ -1711,17 +1711,17 @@ RenderLevel(Level* level, Window window)
 
 	//Cellmap
 	PushTransform(level->player.camera.position, -5.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
-	DrawCells(&level->tilemap, tileNeighbourMap, V2(32.0f, 32.0f), -1);
+	DrawCells(&level->tilemap, tileNeighbourMap, V2(Game::tileFullWidth.x, Game::tileFullWidth.y), -1);
 	PopTransform();
 
 	//Draw edges
 	PushTransform(level->player.camera.position, -4.5f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
 	for (auto &e : edges) {
 		//Notice the 16.0f paddings
-		DrawLine(V2(e.start.x - 16.0f, -e.start.y + 16.0f), V2(e.end.x - 16.0f, -e.end.y + 16.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), 2.5f);
+		DrawLine(V2(e.start.x - Game::tileHalfWidth.x, -e.start.y + Game::tileHalfWidth.y), V2(e.end.x - Game::tileHalfWidth.x, -e.end.y + Game::tileHalfWidth.y), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), 2.5f);
 		PushTransform(V2(0.0f, 0.0f), 0.1f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
-		DrawQuad(V2(e.start.x - 16.0f, -e.start.y + 16.0f), V2(5.0f, 5.0f), GetColor(V4(1.0f, 0.0f, 0.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
-		DrawQuad(V2(e.end.x - 16.0f, -e.end.y + 16.0f), V2(5.0f, 5.0f), GetColor(V4(1.0f, 0.0f, 0.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+		DrawQuad(V2(e.start.x - Game::tileHalfWidth.x, -e.start.y + Game::tileHalfWidth.y), V2(5.0f, 5.0f), GetColor(V4(1.0f, 0.0f, 0.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+		DrawQuad(V2(e.end.x - Game::tileHalfWidth.x, -e.end.y + Game::tileHalfWidth.y), V2(5.0f, 5.0f), GetColor(V4(1.0f, 0.0f, 0.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
 		PopTransform();
 	}
 	PopTransform();
@@ -1741,7 +1741,7 @@ RenderLevel(Level* level, Window window)
 	PushTransform(level->player.camera.position, -2.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
 	for (int i = 0; i < level->losPathStack.capacity; i++)
 	{
-		DrawQuad(V2(level->losPathStack.arr[i].x * 32.0f, level->losPathStack.arr[i].y * -32.0f), V2(30.0f, 30.0f), GetColor(V4(1.0f, 0.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+		DrawQuad(V2(level->losPathStack.arr[i].x * Game::tileFullWidth.x, level->losPathStack.arr[i].y * -Game::tileFullWidth.y), V2(Game::tileFullWidth.x - 2.0f, Game::tileFullWidth.y - 2.0f), GetColor(V4(1.0f, 0.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
 	}
 	PopTransform();
 #endif
@@ -1749,7 +1749,7 @@ RenderLevel(Level* level, Window window)
 	PushTransform(level->player.camera.position, -1.5f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
 	for (unsigned int i = 0; i < level->ais.currentNumberOfAis; i++)
 	{
-		DrawQuad(level->ais.ais[i].position, V2(30.0f, 30.0f), level->ais.ais[i].state == Ai::State::DEAD ? GetColor(V4(1.0f, 0.0f, 0.0f, 1.0f)) : GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+		DrawQuad(level->ais.ais[i].position, V2(Game::tileFullWidth.x - 2.0f, Game::tileFullWidth.y - 2.0f), level->ais.ais[i].state == Ai::State::DEAD ? GetColor(V4(1.0f, 0.0f, 0.0f, 1.0f)) : GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
 	}
 	PopTransform();
 
@@ -1821,8 +1821,8 @@ RenderLevel(Level* level, Window window)
 		for (int i = 0; i < level->player.light->visibilityPolygonPoints.size() - 1; i++)
 		{
 
-			DrawLine(V2(level->player.light->position.x - 16.0f, level->player.light->position.y + 16.0f), V2(level->player.light->visibilityPolygonPoints[i].y - 16.0f, -level->player.light->visibilityPolygonPoints[i].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
-			DrawLine(V2(level->player.light->position.x - 16.0f, level->player.light->position.y + 16.0f), V2(level->player.light->visibilityPolygonPoints[i + 1].y - 16.0f, -level->player.light->visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
+			DrawLine(V2(level->player.light->position.x - Game::tileHalfWidth.x, level->player.light->position.y + Game::tileHalfWidth.y), V2(level->player.light->visibilityPolygonPoints[i].y - Game::tileHalfWidth.x, -level->player.light->visibilityPolygonPoints[i].z + Game::tileHalfWidth.x), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
+			DrawLine(V2(level->player.light->position.x - Game::tileHalfWidth.x, level->player.light->position.y + Game::tileHalfWidth.x), V2(level->player.light->visibilityPolygonPoints[i + 1].y - Game::tileHalfWidth.x, -level->player.light->visibilityPolygonPoints[i + 1].z + Game::tileHalfWidth.x), GetColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f);
 		}
 	}
 	//DrawTriangle(V2(shadow->position.x - 16.0f, shadow->position.y + 16.0f), V2(shadow->visibilityPolygonPoints[shadow->visibilityPolygonPoints.size() - 1].y - 16.0f, -shadow->visibilityPolygonPoints[shadow->visibilityPolygonPoints.size() - 1].z + 16.0f), V2(shadow->visibilityPolygonPoints[0].y - 16.0f, -shadow->visibilityPolygonPoints[0].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
@@ -1850,7 +1850,7 @@ RenderLevel(Level* level, Window window)
 		Begin(&renderers[SHADOW_RENDERER]);
 
 
-		setUniform2f(&shaders[SHADOW_SHADER], "pos", level->lights.lights[k].position + V2(-16.0f, 16.0f) - level->player.position);
+		setUniform2f(&shaders[SHADOW_SHADER], "pos", level->lights.lights[k].position + V2(-Game::tileHalfWidth.x, Game::tileHalfWidth.y) - level->player.position);
 		setUniform3f(&shaders[SHADOW_SHADER], "color1", level->lights.lights[k].color);
 		setUniform1i(&shaders[SHADOW_SHADER], "currentActiveOutput", 0);
 		setUniform1f(&shaders[SHADOW_SHADER], "lightZPosition", level->lights.lights[k].lightZPos);
@@ -1867,13 +1867,13 @@ RenderLevel(Level* level, Window window)
 				for (int i = 0; i < level->lights.lights[k].visibilityPolygonPoints.size() - 1; i++)
 				{
 
-					DrawTriangle(V2(level->lights.lights[k].position.x - 16.0f, level->lights.lights[k].position.y + 16.0f), V2(level->lights.lights[k].visibilityPolygonPoints[i].y - 16.0f, -level->lights.lights[k].visibilityPolygonPoints[i].z + 16.0f), V2(level->lights.lights[k].visibilityPolygonPoints[i + 1].y - 16.0f, -level->lights.lights[k].visibilityPolygonPoints[i + 1].z + 16.0f), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
+					DrawTriangle(V2(level->lights.lights[k].position.x - Game::tileHalfWidth.x, level->lights.lights[k].position.y + Game::tileHalfWidth.y), V2(level->lights.lights[k].visibilityPolygonPoints[i].y - Game::tileHalfWidth.x, -level->lights.lights[k].visibilityPolygonPoints[i].z + Game::tileHalfWidth.y), V2(level->lights.lights[k].visibilityPolygonPoints[i + 1].y - Game::tileHalfWidth.x, -level->lights.lights[k].visibilityPolygonPoints[i + 1].z + Game::tileHalfWidth.x), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
 
 				}
 			}
 
 
-			DrawTriangle(V2(level->lights.lights[k].position.x - 16.0f, level->lights.lights[k].position.y + 16.0f), V2(level->lights.lights[k].visibilityPolygonPoints[level->lights.lights[k].visibilityPolygonPoints.size() - 1].y - 16.0f, -level->lights.lights[k].visibilityPolygonPoints[level->lights.lights[k].visibilityPolygonPoints.size() - 1].z + 16.0f), V2(level->lights.lights[k].visibilityPolygonPoints[0].y - 16.0f, -level->lights.lights[k].visibilityPolygonPoints[0].z + 16.0f), GetColor(0.5f, 1.0f, 0.5f, 1.0f));
+			DrawTriangle(V2(level->lights.lights[k].position.x - Game::tileHalfWidth.x, level->lights.lights[k].position.y + Game::tileHalfWidth.x), V2(level->lights.lights[k].visibilityPolygonPoints[level->lights.lights[k].visibilityPolygonPoints.size() - 1].y - Game::tileHalfWidth.x, -level->lights.lights[k].visibilityPolygonPoints[level->lights.lights[k].visibilityPolygonPoints.size() - 1].z + Game::tileHalfWidth.x), V2(level->lights.lights[k].visibilityPolygonPoints[0].y - Game::tileHalfWidth.x, -level->lights.lights[k].visibilityPolygonPoints[0].z + Game::tileHalfWidth.x), GetColor(0.5f, 1.0f, 0.5f, 1.0f));
 
 			PopTransform();
 		}

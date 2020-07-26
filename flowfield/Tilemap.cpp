@@ -27,10 +27,10 @@ InitializeTilemap(Tilemap* tilemap, float width, float height)
 	tilemap->tileYRange.y = height;
 
 	tilemap->worldXRange.x = 0;
-	tilemap->worldXRange.y = width * 32.0f;
+	tilemap->worldXRange.y = width * Game::tileFullWidth.x;
 
 	tilemap->worldYRange.x = 0;
-	tilemap->worldYRange.y = -height * 32.0f;
+	tilemap->worldYRange.y = -height * Game::tileFullWidth.y;
 }
 
 
@@ -86,7 +86,7 @@ GenerateTestTilemap()
 		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
 	};*/
 
-/*	int gridTemp[20][30] = //Easier to visualize
+	/*int gridTemp[20][30] = //Easier to visualize
 	{
 		{ 1 ,1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
 		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },

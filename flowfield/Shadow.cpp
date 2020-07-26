@@ -136,7 +136,7 @@ UpdateLightFrustum(vec2<float> player)
 #define WEST 3
 #define CELL_EXIST 4
 
-float blockWidth = 32.0f;
+float blockWidth = Game::tileFullWidth.x;
 
 //Again this is possible somehow with bit shift magic
 static void

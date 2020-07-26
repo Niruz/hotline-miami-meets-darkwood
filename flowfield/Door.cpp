@@ -64,8 +64,10 @@ UpdateEdge(Door* door, vec2<float> camera)
 	//	end = end + fakeCamera;
 	start.y = -start.y;
 	end.y = -end.y;
-	start = start + V2(16.0f, 16.0f);
-	end = end + V2(16.0f, 16.0f);
+	//start = start + V2(16.0f, 16.0f);
+	//end = end + V2(16.0f, 16.0f);
+	start = start + Game::tileHalfWidth;
+	end = end + Game::tileHalfWidth;
 	Edge edge = EDGE(start, end);
 	door->edge = edge;
 }
@@ -76,7 +78,8 @@ InitializeDoor(Door* door, vec2<float> position)
 	door->originalPosition = position;
 
 	door->length = 128.0f;
-	door->doorSize = 16.0f;
+	//door->doorSize = 16.0f;
+	door->doorSize = Game::tileHalfWidth.x;
 	vec2<float> size = V2(door->length / 2.0f, door->doorSize / 2.0f);
 
 	door->vertices[0] = V2(position.x - size.x, position.y - size.y);
@@ -106,16 +109,18 @@ GetPointsInsideDoor(Door* door, vec2<float> position)
 
 	//TODO: refactor the AABB stuff
 
-	vec2<float> botLeft  = V2(position.x - 16.0f, position.y - 16.0f);
+/*	vec2<float> botLeft  = V2(position.x - 16.0f, position.y - 16.0f);
 	vec2<float> topLeft  = V2(position.x - 16.0f, position.y + 16.0f);
 	vec2<float> topRight = V2(position.x + 16.0f, position.y + 16.0f);
 	vec2<float> botRight = V2(position.x + 16.0f, position.y - 16.0f);
+	*/
 
+	float offset = Game::tileFullWidth.x == 32.0f ? 16.0f : 8.0f;
 	std::vector<vec2<float>> positions;
-	positions.push_back(V2(position.x - 16.0f, position.y - 16.0f)); //botLeft
-	positions.push_back(V2(position.x - 16.0f, position.y + 16.0f)); //topLeft
-	positions.push_back(V2(position.x + 16.0f, position.y + 16.0f)); //topRight
-	positions.push_back(V2(position.x + 16.0f, position.y - 16.0f)); //botRight
+	positions.push_back(V2(position.x - offset, position.y - offset)); //botLeft
+	positions.push_back(V2(position.x - offset, position.y + offset)); //topLeft
+	positions.push_back(V2(position.x + offset, position.y + offset)); //topRight
+	positions.push_back(V2(position.x + offset, position.y - offset)); //botRight
 
 	vec2<float> temp = V2(0.0f, 0.0f);
 	//for now return all of them
@@ -361,13 +366,15 @@ CheckIfDoorAgentCollided(Door* door, vec2<float> position)
 		agentNormals[1],
 	};
 
+	float offset = Game::tileFullWidth.x == 32.0f ? 16.0f : 8.0f;
+
 	//Midpoints + AABB size (32.0f)
 	vec2<float> agentPositions[4] =
 	{
-		V2(position.x - 16.0f, position.y - 16.0f), //botLeft
-		V2(position.x - 16.0f, position.y + 16.0f), //topLeft
-		V2(position.x + 16.0f, position.y + 16.0f), //topRight
-		V2(position.x + 16.0f, position.y - 16.0f) //botRight
+		V2(position.x - offset, position.y - offset), //botLeft
+		V2(position.x - offset, position.y + offset), //topLeft
+		V2(position.x + offset, position.y + offset), //topRight
+		V2(position.x + offset, position.y - offset) //botRight
 	};
 
 

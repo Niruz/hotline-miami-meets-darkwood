@@ -31,6 +31,8 @@
 #include "Math.cpp"
 #include "UtilityFunctions.cpp"
 
+#include "GameGlobals.cpp"
+
 #include "Font.cpp"
 #include "Texture.cpp"
 #include "Animation.cpp"
@@ -43,7 +45,7 @@
 #include "Agent.cpp"
 #include "Door.cpp"
 
-#include "GameGlobals.cpp"
+
 #include "BinaryHeap.cpp"
 #include "Pathfinding.cpp"
 #include "Level.cpp"

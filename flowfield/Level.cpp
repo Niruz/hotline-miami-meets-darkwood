@@ -39,7 +39,7 @@ UpdateCamera(Player* player)
 
 struct Projectile
 {
-	vec2<float> AABB = V2(4.0f, 4.0f);
+	vec2<float> AABB = Game::tileFullWidth.x == 32.0f ? V2(4.0f, 4.0f) : V2(2.0f, 2.0f);
 	vec2<float> direction;
 	vec2<float> position;
 	int textureID;
@@ -86,7 +86,7 @@ struct Ai
 	PathStack patrolStack;
 
 	vec2<float> position;
-	vec2<float> halfSize = V2(16.0f, 16.0f);
+	vec2<float> halfSize = Game::tileFullWidth.x == 32.0f ? V2(16.0f, 16.0f) : V2(8.0f, 8.0f);
 
 	//Default paths
 	//vec2<int> patrolFrom;
@@ -173,8 +173,8 @@ InitializeAi(Ai* ai, vec2<int> patrolFrom, vec2<int> patrolTo)
 	PushStack(&ai->patrolStack, patrolTo);
 	ai->currentGoal = patrolFrom; //For some reason we start on our own?
 
-	ai->position = V2(patrolFrom.x * 32.0f, patrolFrom.y * -32.0f);
-	ai->direction = Normalize(V2(patrolTo.x * 32.0f, patrolTo.y * -32.0f) - ai->position);
+	ai->position = V2(patrolFrom.x * Game::tileFullWidth.x, patrolFrom.y * -Game::tileFullWidth.y);
+	ai->direction = Normalize(V2(patrolTo.x * Game::tileFullWidth.x, patrolTo.y * -Game::tileFullWidth.y) - ai->position);
 	ai->state = Ai::State::IDLE_PATROL;
 
 	ai->maxPatrolPaths = ai->patrolStack.capacity;
@@ -204,8 +204,8 @@ InitializeAi(Ai* ai, int count, ...)
 	ai->currentGoal = ai->patrolStack.arr[0]; //For some reason we start on our own?
 	vec2<int> patrolTo = ai->patrolStack.arr[1];
 
-	ai->position = V2(ai->currentGoal.x * 32.0f, ai->currentGoal.y * -32.0f);
-	ai->direction = Normalize(V2(patrolTo.x * 32.0f, patrolTo.y * -32.0f) - ai->position);
+	ai->position = V2(ai->currentGoal.x * Game::tileFullWidth.x, ai->currentGoal.y * -Game::tileFullWidth.y);
+	ai->direction = Normalize(V2(patrolTo.x * Game::tileFullWidth.x, patrolTo.y * -Game::tileFullWidth.y) - ai->position);
 	ai->state = Ai::State::IDLE_PATROL;
 
 	ai->maxPatrolPaths = ai->patrolStack.capacity;
@@ -238,8 +238,8 @@ InitializeAi(AIs* ais, Ai::State state, int count, ...)
 	ais->ais[ais->currentNumberOfAis].currentGoal = ais->ais[ais->currentNumberOfAis].patrolStack.arr[0]; //For some reason we start on our own?
 	vec2<int> patrolTo = ais->ais[ais->currentNumberOfAis].patrolStack.arr[1];
 
-	ais->ais[ais->currentNumberOfAis].position = V2(ais->ais[ais->currentNumberOfAis].currentGoal.x * 32.0f, ais->ais[ais->currentNumberOfAis].currentGoal.y * -32.0f);
-	ais->ais[ais->currentNumberOfAis].direction = Normalize(V2(patrolTo.x * 32.0f, patrolTo.y * -32.0f) - ais->ais[ais->currentNumberOfAis].position);
+	ais->ais[ais->currentNumberOfAis].position = V2(ais->ais[ais->currentNumberOfAis].currentGoal.x * Game::tileFullWidth.x, ais->ais[ais->currentNumberOfAis].currentGoal.y * -Game::tileFullWidth.y);
+	ais->ais[ais->currentNumberOfAis].direction = Normalize(V2(patrolTo.x * Game::tileFullWidth.x, patrolTo.y * -Game::tileFullWidth.y) - ais->ais[ais->currentNumberOfAis].position);
 	ais->ais[ais->currentNumberOfAis].state = state;
 	ais->ais[ais->currentNumberOfAis].originalIdleState = state;
 
@@ -286,7 +286,7 @@ InitializeTestLevel(Level* level)
 
 	level->tilemap = GenerateTestTilemap();
 
-	InitializePlayer(&level->player, V2(64.0f, -64.0f));
+	InitializePlayer(&level->player, Game::tileFullWidth.x == 32.0f ? V2(64.0f, -64.0f) : V2(32.0f, -32.0f));
 
 	level->player.light = CreateLight(&level->lights, V2(0.0f, 0.0f), V3(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 													                     static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
@@ -306,8 +306,8 @@ InitializeTestLevel(Level* level)
 		SetBit(&tileNeighbourMap[x * level->tilemap.width + (level->tilemap.width - 2)].edge_exist_cell_exist, CELL_EXIST);
 	}
 
-	InitializeDoor(&level->doors[0], V2(320.0f, -320.0f));
-	InitializeDoor(&level->doors[1], V2(180.0f, -180.0f));
+	InitializeDoor(&level->doors[0], Game::tileFullWidth.x == 32.0f ? V2(320.0f, -320.0f) : V2(160.0f, -160.0f));
+	InitializeDoor(&level->doors[1], Game::tileFullWidth.x == 32.0f ? V2(180.0f, -180.0f) : V2(90.0f, -90.0f));
 
 	//call this before the above two methods so theyre taken into account for all lights
 //wont this index always be the same....?
@@ -412,7 +412,7 @@ UpdateAi(Level* level, float dt)
 
 		if (currentAi->state == Ai::State::IDLE_PATROL)
 		{
-			vec2<float> goalPosition = V2(currentAi->currentGoal.x * 32.0f, currentAi->currentGoal.y * -32.0f);
+			vec2<float> goalPosition = V2(currentAi->currentGoal.x * Game::tileFullWidth.x, currentAi->currentGoal.y * -Game::tileFullWidth.y);
 			float lengthToGoal = Len(goalPosition - currentAi->position);
 			currentAi->position += currentAi->direction * 60.0f * dt;
 			if (lengthToGoal < 1.0f)
@@ -424,7 +424,7 @@ UpdateAi(Level* level, float dt)
 				vec2<int> newGoal = currentAi->patrolStack.arr[currentAi->nextPatrolIndex];
 
 				currentAi->currentGoal = currentAi->patrolStack.arr[currentAi->nextPatrolIndex];
-				currentAi->direction = Normalize(V2(newGoal.x * 32.0f, newGoal.y * -32.0f) - currentAi->position);
+				currentAi->direction = Normalize(V2(newGoal.x * Game::tileFullWidth.x, newGoal.y * -Game::tileFullWidth.y) - currentAi->position);
 			}
 
 		}
@@ -450,7 +450,7 @@ UpdateAi(Level* level, float dt)
 				currentAi->position += currentAi->direction * 35.0f * dt;
 				vec2<float> reflectionNormal = V2(0.0f, 0.0f);
 				vec2<float> moveDeltaAgent = currentAi->direction * 0.05f;
-				if (CheckTileCollision(&currentAi->position, moveDeltaAgent, &level->tilemap, V2(16.0f, 16.0f), &reflectionNormal))
+				if (CheckTileCollision(&currentAi->position, moveDeltaAgent, &level->tilemap, Game::tileFullWidth.x == 32.0f ? V2(16.0f, 16.0f) : V2(8.0f, 8.0f), &reflectionNormal))
 				{
 					currentAi->direction = Normalize(Reflect(currentAi->direction, reflectionNormal));
 				}
@@ -467,7 +467,7 @@ UpdateAi(Level* level, float dt)
 		}
 		else if (currentAi->state == Ai::State::INSPECT)
 		{
-			vec2<float> goalPosition = V2(currentAi->currentGoal.x * 32.0f, currentAi->currentGoal.y * -32.0f);
+			vec2<float> goalPosition = V2(currentAi->currentGoal.x * Game::tileFullWidth.x, currentAi->currentGoal.y * -Game::tileFullWidth.y);
 			float lengthToGoal = Len(goalPosition - currentAi->position);
 			currentAi->position += currentAi->direction * 60.0f * dt;
 			if (lengthToGoal < 1.0f)
@@ -475,7 +475,7 @@ UpdateAi(Level* level, float dt)
 				if (currentAi->pathstack.capacity > 0)
 				{
 					currentAi->currentGoal = PopStack(&currentAi->pathstack);
-					vec2<float> goalFloat = V2(currentAi->currentGoal.x * 32.0f, currentAi->currentGoal.y * -32.0f); //y is reversed in directx
+					vec2<float> goalFloat = V2(currentAi->currentGoal.x * Game::tileFullWidth.x, currentAi->currentGoal.y * -Game::tileFullWidth.y); //y is reversed in directx
 					currentAi->direction = Normalize(goalFloat - currentAi->position);
 				}
 				else 
@@ -530,7 +530,7 @@ UpdateAi(Level* level, float dt)
 					currentAi->currentGoal = PopStack(&currentAi->pathstack); // i think we cna double pop it here
 					//currentAi->currentGoal = PopStack(&currentAi->pathstack);
 
-					vec2<float> goalFloat = V2(currentAi->currentGoal.x * 32.0f, currentAi->currentGoal.y * -32.0f); //y is reversed in directx
+					vec2<float> goalFloat = V2(currentAi->currentGoal.x * Game::tileFullWidth.x, currentAi->currentGoal.y * -Game::tileFullWidth.y); //y is reversed in directx
 					currentAi->direction = Normalize(goalFloat - currentAi->position);
 				}
 			}
@@ -538,7 +538,7 @@ UpdateAi(Level* level, float dt)
 		//Inspect and return to idle are awfully similar
 		else if (currentAi->state == Ai::State::RETURN_TO_IDLE)
 		{
-			vec2<float> goalPosition = V2(currentAi->currentGoal.x * 32.0f, currentAi->currentGoal.y * -32.0f);
+			vec2<float> goalPosition = V2(currentAi->currentGoal.x * Game::tileFullWidth.x, currentAi->currentGoal.y * -Game::tileFullWidth.y);
 			float lengthToGoal = Len(goalPosition - currentAi->position);
 			currentAi->position += currentAi->direction * 60.0f * dt;
 			if (lengthToGoal < 1.0f)
@@ -546,7 +546,7 @@ UpdateAi(Level* level, float dt)
 				if (currentAi->pathstack.capacity > 0)
 				{
 					currentAi->currentGoal = PopStack(&currentAi->pathstack);
-					vec2<float> goalFloat = V2(currentAi->currentGoal.x * 32.0f, currentAi->currentGoal.y * -32.0f); //y is reversed in directx
+					vec2<float> goalFloat = V2(currentAi->currentGoal.x * Game::tileFullWidth.x, currentAi->currentGoal.y * -Game::tileFullWidth.y); //y is reversed in directx
 					currentAi->direction = Normalize(goalFloat - currentAi->position);
 				}
 				else
@@ -624,7 +624,7 @@ HandleInput(Level* level)
 	}
 	if (MouseReleased(RIGHT))
 	{
-		level->player.light = CreateLight(&level->lights, level->cursorPos - V2(-16.0f, 16.0f), V3(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
+		level->player.light = CreateLight(&level->lights, level->cursorPos - V2(-Game::tileHalfWidth.x, Game::tileHalfWidth.y), V3(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 																								   static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 																								   static_cast <float> (rand()) / static_cast <float> (RAND_MAX)),
 																								   Light::LIGHT_TYPE::POINT);
@@ -664,7 +664,7 @@ HandleInput(Level* level)
 			currentAi->currentGoal = PopStack(&currentAi->pathstack); // i think we cna double pop it here
 			currentAi->currentGoal = PopStack(&currentAi->pathstack);
 
-			vec2<float> goalFloat = V2(currentAi->currentGoal.x * 32.0f, currentAi->currentGoal.y * -32.0f); //y is reversed in directx
+			vec2<float> goalFloat = V2(currentAi->currentGoal.x * Game::tileFullWidth.x, currentAi->currentGoal.y * -Game::tileFullWidth.y); //y is reversed in directx
 			currentAi->direction = Normalize(goalFloat - currentAi->position);
 		}
 	}
@@ -698,7 +698,7 @@ IntegratePhysics(Level* level, float dt)
 
 	UpdateAi(level, dt);
 
-	CheckTileCollision(&level->player.position, level->moveDelta * dt, &level->tilemap, V2(14.0f, 14.0f));
+	CheckTileCollision(&level->player.position, level->moveDelta * dt, &level->tilemap, Game::tileFullWidth.x == 32.0f ? V2(14.0f, 14.0f) : V2(7.0f, 7.0f));
 
 
 	for (unsigned int i = 0; i < 2; i++)
