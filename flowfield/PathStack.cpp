@@ -44,6 +44,15 @@ PushStack(PathStack* stack, vec2<int> vec)
 	stack->capacity++;
 }
 
+static vec2<int>
+GetCurrentStack(PathStack* stack)
+{
+	return stack->arr[stack->capacity]; 
+	/*if (stack->capacity == 0)
+		return stack->arr[0];
+	else
+		return stack->arr[stack->capacity - 1];*/
+}
 
 static vec2<int>
 PopStack(PathStack* stack)

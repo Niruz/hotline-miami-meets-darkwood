@@ -339,6 +339,34 @@ CheckTileCollision(vec2<float>* position, vec2<float> moveDelta, Tilemap* tilema
 }
 
 static bool
+IsPathToTargetClear(Tilemap* tilemap, vec2<int> p0, vec2<int> p1)
+{
+	//InitializeStack(stack, 1);
+	//ResetStack(stack);
+	int dx = p1.x - p0.x;
+	int dy = p1.y - p0.y;
+	int N = MAX(ABS(dx), ABS(dy));
+	float divN = (N == 0) ? 0.0 : 1.0 / N;
+	float xstep = dx * divN;
+	float ystep = dy * divN;
+	float x = p0.x, y = p0.y;
+	for (int step = 0; step <= N; step++, x += xstep, y += ystep) {
+		vec2<int> point = V2((int)Round(x), (int)Round(y));
+		int index = GetIndex(point.x, point.y, tilemap->width);
+		if (ValidIndex(point.x, point.y, tilemap->width, tilemap->height) && TestBit(tilemap->tilemap, index))
+		{
+			
+		}
+		else
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+
+static bool
 IsPathToTargetClear(Tilemap* tilemap, vec2<int> p0, vec2<int> p1, PathStack* stack)
 {
 	//InitializeStack(stack, 1);

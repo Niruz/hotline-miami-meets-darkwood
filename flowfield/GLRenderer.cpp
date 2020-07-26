@@ -1670,7 +1670,7 @@ RenderLevel(Level* level, Window window)
 
 	level->player.light->position = level->player.position - V2(-16.0f, 16.0f);
 	level->player.light->direction = Normalize(level->cursorPos - level->player.light->position);
-	level->player.light->direction = level->directionToCursor;
+	level->player.light->direction = level->shadowDirectionToCursor;
 
 	//Draw the texture that shapes the shadowing
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[OFF_SCREEN_STENCIL_BUFFER].fbo);
@@ -1686,7 +1686,7 @@ RenderLevel(Level* level, Window window)
 	Begin(&renderers[SHADOW_RENDERER]);
 
 	//shadow map over player
-	float rotationOfShadowMap = atan2f(-level->directionToCursor.y, level->directionToCursor.x);
+	float rotationOfShadowMap = atan2f(-level->shadowDirectionToCursor.y, level->shadowDirectionToCursor.x);
 	PushTransform(level->player.camera.position, -3.0f, V2(cosf(rotationOfShadowMap + DegreesToRadians(-90.0f)), sinf(rotationOfShadowMap + DegreesToRadians(-90.0f))));
 	DrawQuad2(level->player.position, V2(2000.0f, 2000.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), textures[SHADOWMAP].ID, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
 	PopTransform();
@@ -1749,11 +1749,19 @@ RenderLevel(Level* level, Window window)
 	PushTransform(level->player.camera.position, -1.5f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
 	for (unsigned int i = 0; i < level->ais.currentNumberOfAis; i++)
 	{
-		DrawQuad(level->ais.ais[i].position, V2(30.0f, 30.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+		DrawQuad(level->ais.ais[i].position, V2(30.0f, 30.0f), level->ais.ais[i].state == Ai::State::DEAD ? GetColor(V4(1.0f, 0.0f, 0.0f, 1.0f)) : GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
 	}
 	PopTransform();
-	//Doors
 
+	//projectiles
+	PushTransform(level->player.camera.position, -1.4f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+	for (unsigned int i = 0; i < level->projectiles.currentActiveProjectiles; i++)
+	{
+		DrawQuad(level->projectiles.projectiles[i].position, V2(level->projectiles.projectiles[i].AABB.x *2.0f, level->projectiles.projectiles[i].AABB.y *2.0f), GetColor(V4(1.0f, 1.0f, 0.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+	}
+	PopTransform();
+
+	//Doors
 	PushTransform(level->player.camera.position, -1.5f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
 	for (unsigned int i = 0; i < 2; i++)
 	{

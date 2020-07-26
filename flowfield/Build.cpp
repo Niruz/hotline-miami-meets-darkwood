@@ -44,11 +44,12 @@
 #include "Door.cpp"
 
 #include "GameGlobals.cpp"
+#include "BinaryHeap.cpp"
+#include "Pathfinding.cpp"
 #include "Level.cpp"
 #include "GLRenderer.cpp"
 
-#include "BinaryHeap.cpp"
-#include "Pathfinding.cpp"
+
 
 
 #include "PeekMessage.cpp"

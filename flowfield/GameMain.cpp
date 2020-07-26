@@ -50,6 +50,8 @@ GameMain(Window window)
 	Game::running = true;
 	while (Game::running) {
 
+		//reset keys
+		ResetKeys();
 		//Windows messages
 		PeekMessages();
 
@@ -88,7 +90,7 @@ GameMain(Window window)
 		__int32 MSPerFrame = (__int32)(((1000 * CounterElapsed) / PerfCountFrequency));
 		__int32 FPS = PerfCountFrequency / CounterElapsed;
 
-		std::cout << "FPS: "<< FPS << "ms/frame: " << MSPerFrame << std::endl;
+		//std::cout << "FPS: "<< FPS << "ms/frame: " << MSPerFrame << std::endl;
 
 
 		LastCounter = EndCounter;

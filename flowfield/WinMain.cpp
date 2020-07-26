@@ -204,7 +204,20 @@ window_callback(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
-	case WM_SYSKEYDOWN:
+	case WM_KEYUP:
+	{
+		bool wasDown = ((lparam & (1 << 30)) != 0);
+		SetKey(wparam, false, wasDown, false);
+	}
+	break;
+	case WM_KEYDOWN:
+	{
+		bool wasDown = ((lparam & (1 << 30)) != 0);
+		bool isDown = ((lparam & (1 << 31)) == 0);
+		SetKey(wparam, isDown, false, !wasDown && isDown);
+	}
+	break;
+	/*case WM_SYSKEYDOWN:
 	case WM_SYSKEYUP:
 	case WM_KEYDOWN:
 	case WM_KEYUP:
@@ -221,7 +234,7 @@ window_callback(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
 		if (keyState.currentKeyState[VK_SPACE] && !keyState.previousKeyState[VK_SPACE])
 			PlayWaveFile(&sound, 0, true);
 	}
-	break;
+	break;*/
 
 	case WM_MOUSEMOVE:
 	{
