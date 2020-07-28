@@ -122,6 +122,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="Tiled.cpp" />
     <None Include="Physics.cpp" />
     <None Include="GameGlobals.cpp" />
     <None Include="PeekMessage.cpp" />
@@ -191,6 +192,10 @@
     <None Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="rapidxml.hpp" />
+    <ClInclude Include="rapidxml_iterators.hpp" />
+    <ClInclude Include="rapidxml_print.hpp" />
+    <ClInclude Include="rapidxml_utils.hpp" />
     <ClInclude Include="wglext.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

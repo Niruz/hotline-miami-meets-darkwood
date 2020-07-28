@@ -37,8 +37,10 @@ void main()
 	else
 		multiplier = stencil;*/
 
-
-	fragColor = (stencil * shadow + color);
+	vec4 finalColor = (stencil * shadow + color);
+	finalColor = vec4(finalColor.r * 0.3 + finalColor.g * 0.59 + finalColor.b * 0.11);
+	fragColor = finalColor;
+	//fragColor = (stencil * shadow + color);
 
 	//fragColor = vec4(stencil, stencil2, stencil , 1.0f);
 

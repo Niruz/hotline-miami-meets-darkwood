@@ -201,15 +201,42 @@ PopTransform()
 static void
 ResizeGL(GLRenderer* renderer, mat4x4& projectionMatrix, float width, float height)
 {
-	projectionMatrix = setOrthoFrustum(-(width*0.5f), (width*0.5f), -(height*0.5f), (height*0.5f), -100.0f, 100.0f);
-	glViewport(0, 0, width, height);
-	//Bind(renderer->shader);
-	Bind(&shaders[FORWARD_SHADER]);
+	//projectionMatrix = setOrthoFrustum(-(width*0.5f), (width*0.5f), -(height*0.5f), (height*0.5f), -100.0f, 100.0f);
+	//float aspectRatio = (float)width / (float)height;
+	//projectionMatrix = setOrthoFrustum(-(width*0.5f) * aspectRatio, (width*0.5f) * aspectRatio, -(height*0.5f), (height*0.5f), -100.0f, 100.0f);
 
-	//setUniformMatrix4fv(renderer->shader, "projectionMatrix", 1, GL_FALSE, projectionMatrix);
+	float aspect = width / height;
+	glViewport(0, 0, width, height);
+	if (aspect >= 1.0)
+		setOrthoFrustum(-(width*0.5f) * aspect, (width*0.5f) * aspect, -(height*0.5f), (height*0.5f), -100.0f, 100.0f);
+	else
+		setOrthoFrustum(-(width*0.5f), (width*0.5f), -(height*0.5f) / aspect, (height*0.5f) / aspect, -100.0f, 100.0f);
+//	projectionMatrix = setOrthoFrustum(-aspectRatio*0.5f, aspectRatio*0.5f, -(height*0.5f), (height*0.5f), -100.0f, 100.0f);
+	//projectionMatrix = setOrthoFrustum(-aspectRatio, aspectRatio, 0.0f, 1.0f, -100.0f, 100.0f);
+	//orthoM(projectionMatrix, 0, -aspectRatio, aspectRatio, -1, 1, -1, 1);
+	glViewport(0, 0, width, height);
+
+	//i think i need a window width height and that is used for cursor stuff? and then an aspect ratio based matrix?
+
+	Bind(&shaders[SHADOW_SHADER]);
+	setUniformMatrix4fv(&shaders[SHADOW_SHADER], "projectionMatrix", 1, GL_FALSE, projectionMatrix);
+	Unbind(&shaders[SHADOW_SHADER]);
+
+	Bind(&shaders[STENCIL_SHADER]);
+	setUniformMatrix4fv(&shaders[STENCIL_SHADER], "projectionMatrix", 1, GL_FALSE, projectionMatrix);
+	Unbind(&shaders[STENCIL_SHADER]);
+
+	Bind(&shaders[FORWARD_SHADER]);
+	setUniformMatrix4fv(&shaders[FORWARD_SHADER], "projectionMatrix", 1, GL_FALSE, projectionMatrix);
+	Unbind(&shaders[FORWARD_SHADER]);
+	
+	//Bind(renderer->shader);
+/*	Bind(&shaders[FORWARD_SHADER]);
+
+	setUniformMatrix4fv(renderer->shader, "projectionMatrix", 1, GL_FALSE, projectionMatrix);
 
 	//Unbind(renderer->shader);
-	Unbind(&shaders[FORWARD_SHADER]);
+	Unbind(&shaders[FORWARD_SHADER]);*/
 }
 
 static void
@@ -1926,4 +1953,5 @@ static void
 ResizeGL(int width, int height) 
 {
 	//TODO: IMPLEMENT - keep aspect ratio you noob :)
+	int shit = 5;
 }

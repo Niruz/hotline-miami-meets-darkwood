@@ -27,6 +27,8 @@ GameMain(Window window)
 	Initialize(&renderers[COLOR_RENDERER], &vertexBuffers[COLOR_VERTEX_BUFFER], 60000, Game::ortho, (float)window.width, (float)window.height);
 	Initialize(&renderers[SHADOW_RENDERER], &vertexBuffers[SHADOW_VERTEX_BUFFER], 1000, Game::ortho, (float)window.width, (float)window.height, true);
 
+	OnInitialize(&tiledMapManager);
+
 
 	//Level and gameplay stuff
 	Level activeLevel;

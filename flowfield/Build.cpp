@@ -12,12 +12,18 @@
 #include <string>
 #include <cstdlib>
 #include <algorithm>
+#include <math.h>
+#include <sstream>
+#include <iostream>
 #include <iterator>     // std::distance
 
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+#include "rapidxml.hpp"
+#include "rapidxml_utils.hpp"
 
 #include "DirectSound.cpp" //this actually includes some windows/c++ headers that we might want to move
 
@@ -35,6 +41,7 @@
 
 #include "Font.cpp"
 #include "Texture.cpp"
+#include "Tiled.cpp"
 #include "Animation.cpp"
 #include "IndexBuffer.cpp"
 #include "Shader.cpp"

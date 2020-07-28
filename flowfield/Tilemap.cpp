@@ -1,6 +1,6 @@
 struct Tilemap
 {
-	int* tilemap;
+	int* tilemap = nullptr;
 	unsigned int width;
 	unsigned int height;
 	vec2<float> worldXRange;
@@ -15,6 +15,8 @@ InitializeTilemap(Tilemap* tilemap, float width, float height)
 {
 	unsigned int realSize = ((unsigned int)(width*height) / 32) + 1;
 	//tilemap->tilemap = _Alloc_Memory(int, u64(realSize));
+	if (tilemap->tilemap != nullptr)
+		delete[] tilemap;
 	tilemap->tilemap = new int[realSize];
 
 	tilemap->width = (unsigned int)width;

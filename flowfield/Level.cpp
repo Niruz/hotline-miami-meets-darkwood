@@ -278,15 +278,69 @@ GetRandomTimeMillis(unsigned int low, unsigned int high)
 	return (low + (rand() % ((high - low) + 1))) * 1000;
 }
 
+static void
+InitializeLevelFromTiledMap(Level* level, const std::string& mapName, const std::string& tileset)
+{
+	std::map<std::string, XMLTile>& xmlTiles = GetTileset(&tiledMapManager, tileset);
+
+	XMLMap* xmlMap = GetMap(&tiledMapManager, mapName);
+	XMLLayer* xmlLayer = GetLayer(xmlMap, "Tile Layer 1");
+
+	int tileMapWidth = std::stoi(xmlLayer->myWidth);
+	int tileMapHeight = std::stoi(xmlLayer->myHeight);
+
+	InitializeTilemap(&level->tilemap, tileMapWidth, tileMapHeight);
+
+	for (int i = 0; i < xmlLayer->myData.size(); i++)
+	{
+		if (xmlTiles.count(xmlLayer->myData[i])) 
+		{
+			if (i == 42)
+				int shit = 5;
+			auto test = xmlTiles.find(xmlLayer->myData[i])->second;
+			//bool oneway = HasProperty(&xmlTiles.find(xmlLayer->myData[i])->second, "OneWay");
+			bool hasBlocking = HasProperty(&xmlTiles.find(xmlLayer->myData[i])->second, "Blocking");
+			if (hasBlocking)
+			{
+				std::string value = GetProperty(&xmlTiles.find(xmlLayer->myData[i])->second, "Blocking");
+				//if its equal to 0 its true
+				if (strcmp(value.c_str(), "false") == 0)
+				{
+					SetBit(level->tilemap.tilemap, i);
+				}
+				else 
+				{
+					ClearBit(level->tilemap.tilemap, i);
+				}
+			}
+			//bool spikedFloor = HasProperty(&xmlTiles.find(xmlLayer->myData[i])->second, "SpikedFloor");
+
+			
+			/*if (blocking)
+			{
+				ClearBit(level->tilemap.tilemap, i);
+			}
+			else
+			{
+				SetBit(level->tilemap.tilemap, i);
+			}*/
+		}
+		else 
+		{
+			std::cout << "where shit happening" << std::endl;
+		}
+	}
+}
 
 static void
 InitializeTestLevel(Level* level)
 {
 	srand(static_cast <unsigned> (time(0)));
 
-	level->tilemap = GenerateTestTilemap();
+	InitializeLevelFromTiledMap(level, "TestMap", "TestTileset");
+	//level->tilemap = GenerateTestTilemap();
 
-	InitializePlayer(&level->player, Game::tileFullWidth.x == 32.0f ? V2(64.0f, -64.0f) : V2(32.0f, -32.0f));
+	InitializePlayer(&level->player, Game::tileFullWidth.x == 32.0f ? V2(96.0f, -96.0f) : V2(64.0f, -64.0f));
 
 	level->player.light = CreateLight(&level->lights, V2(0.0f, 0.0f), V3(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 													                     static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
@@ -294,8 +348,19 @@ InitializeTestLevel(Level* level)
 														                 Light::LIGHT_TYPE::POINT);
 
 	tileNeighbourMap = new TileNeighbourMap[level->tilemap.width * level->tilemap.height];
+	for (int i = 0; i < level->tilemap.width * level->tilemap.height; i++ )
+	{
+		if (TestBit(level->tilemap.tilemap, i))
+		{
+			ClearBit(&tileNeighbourMap[i].edge_exist_cell_exist, CELL_EXIST);
+		}
+		else 
+		{
+			SetBit(&tileNeighbourMap[i].edge_exist_cell_exist, CELL_EXIST);
+		}
+	}
 	//populate the world with edges
-	for (int x = 1; x < (level->tilemap.width - 1); x++) //width 
+	/*for (int x = 1; x < (level->tilemap.width - 1); x++) //width 
 	{
 		SetBit(&tileNeighbourMap[1 * level->tilemap.width + x].edge_exist_cell_exist, CELL_EXIST);
 		SetBit(&tileNeighbourMap[(level->tilemap.height - 2) * level->tilemap.width + x].edge_exist_cell_exist, CELL_EXIST);
@@ -304,7 +369,7 @@ InitializeTestLevel(Level* level)
 	{
 		SetBit(&tileNeighbourMap[x * level->tilemap.width + 1].edge_exist_cell_exist, CELL_EXIST);
 		SetBit(&tileNeighbourMap[x * level->tilemap.width + (level->tilemap.width - 2)].edge_exist_cell_exist, CELL_EXIST);
-	}
+	}*/
 
 	InitializeDoor(&level->doors[0], Game::tileFullWidth.x == 32.0f ? V2(320.0f, -320.0f) : V2(160.0f, -160.0f));
 	InitializeDoor(&level->doors[1], Game::tileFullWidth.x == 32.0f ? V2(180.0f, -180.0f) : V2(90.0f, -90.0f));
@@ -653,6 +718,8 @@ HandleInput(Level* level)
 	{
 		std::cout << "T UP" << std::endl;
 		int shit = 5;
+		vec2<int> inspectionGoal = WorldToTileCoordinates(&level->tilemap, level->cursorPos);
+		std::cout << "Inspection goal tile: (" << inspectionGoal.x << "," << inspectionGoal.y << ")" << std::endl;
 		for (unsigned int i = 0; i < level->ais.currentNumberOfAis; i++)
 		{
 			Ai* currentAi = &level->ais.ais[i];
