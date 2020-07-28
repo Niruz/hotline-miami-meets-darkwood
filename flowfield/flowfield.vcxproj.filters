@@ -37,6 +37,15 @@
     <Filter Include="Shader\Circle Shader">
       <UniqueIdentifier>{97e6402b-87b5-4cd5-9fc7-9ba7581b2a62}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader\Forward Shader\Characters">
+      <UniqueIdentifier>{434ad2d5-3e77-48ac-adbb-918cb3760289}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\Shadow Shader\Object\player">
+      <UniqueIdentifier>{ed83a310-ec0d-44ad-9f54-5bda9898f611}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\Final Passes">
+      <UniqueIdentifier>{7931f14c-55b7-4fd9-8617-663bb78a6f7c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Build.cpp">
@@ -163,6 +172,24 @@
     </None>
     <None Include="Tiled.cpp">
       <Filter>Source Files</Filter>
+    </None>
+    <None Include="Shaders\forwardVertex2.glsl">
+      <Filter>Shader\Forward Shader\Characters</Filter>
+    </None>
+    <None Include="Shaders\fragmentVertex2.glsl">
+      <Filter>Shader\Forward Shader\Characters</Filter>
+    </None>
+    <None Include="Shaders\shadowfragment2.glsl">
+      <Filter>Shader\Shadow Shader\Object\player</Filter>
+    </None>
+    <None Include="Shaders\shadowvertex2.glsl">
+      <Filter>Shader\Shadow Shader\Object\player</Filter>
+    </None>
+    <None Include="Shaders\finalFragment.glsl">
+      <Filter>Shader\Final Passes</Filter>
+    </None>
+    <None Include="Shaders\finalVertex.glsl">
+      <Filter>Shader\Final Passes</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

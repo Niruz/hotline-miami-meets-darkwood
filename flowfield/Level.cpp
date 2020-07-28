@@ -342,10 +342,11 @@ InitializeTestLevel(Level* level)
 
 	InitializePlayer(&level->player, Game::tileFullWidth.x == 32.0f ? V2(96.0f, -96.0f) : V2(64.0f, -64.0f));
 
-	level->player.light = CreateLight(&level->lights, V2(0.0f, 0.0f), V3(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
+	/*level->player.light = CreateLight(&level->lights, V2(0.0f, 0.0f), V3(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 													                     static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 		                                                                 static_cast <float> (rand()) / static_cast <float> (RAND_MAX)),
-														                 Light::LIGHT_TYPE::POINT);
+														                 Light::LIGHT_TYPE::POINT);*/
+	level->player.light = CreateLight(&level->lights, V2(0.0f, 0.0f), V3(0.5f, 0.5f, 0.5f), Light::LIGHT_TYPE::POINT); 
 
 	tileNeighbourMap = new TileNeighbourMap[level->tilemap.width * level->tilemap.height];
 	for (int i = 0; i < level->tilemap.width * level->tilemap.height; i++ )
@@ -689,10 +690,11 @@ HandleInput(Level* level)
 	}
 	if (MouseReleased(RIGHT))
 	{
-		level->player.light = CreateLight(&level->lights, level->cursorPos - V2(-Game::tileHalfWidth.x, Game::tileHalfWidth.y), V3(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
+		/*level->player.light = CreateLight(&level->lights, level->cursorPos - V2(-Game::tileHalfWidth.x, Game::tileHalfWidth.y), V3(static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 																								   static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
 																								   static_cast <float> (rand()) / static_cast <float> (RAND_MAX)),
-																								   Light::LIGHT_TYPE::POINT);
+																								   Light::LIGHT_TYPE::POINT);*/
+		level->player.light = CreateLight(&level->lights, level->cursorPos - V2(-Game::tileHalfWidth.x, Game::tileHalfWidth.y), V3(0.5f, 0.5f, 0.5f), Light::LIGHT_TYPE::POINT);
 	}
 	if (ScroolWheelUp())
 	{

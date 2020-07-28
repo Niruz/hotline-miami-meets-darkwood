@@ -15,8 +15,11 @@
 enum FRAME_BUFFERS
 {
 	OFF_SCREEN_COLOR_BUFFER,
+	OFF_SCREEN_COLOR_BUFFER_CHARACTERS,
 	OFF_SCREEN_SHADOW_BUFFER,
+	OFF_SCREEN_SHADOW_BUFFER_CHARACTERS,
 	OFF_SCREEN_STENCIL_BUFFER,
+	FINAL_RENDER_BUFFER,
 	MAX_FRAME_BUFFERS,
 };
 
@@ -313,7 +316,105 @@ InitializeOffScreenBuffer(float width, float height)
 			glDrawBuffers(3, DrawBuffers);
 
 		}
+		else if (i == OFF_SCREEN_SHADOW_BUFFER_CHARACTERS)
+		{
+
+			for (unsigned int k = 0; k < 1; k++)
+			{
+				glGenTextures(1, &framebuffers[i].textureIDs[k]);
+				glBindTexture(GL_TEXTURE_2D, framebuffers[i].textureIDs[k]);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+
+
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + k, GL_TEXTURE_2D, framebuffers[i].textureIDs[k], 0);
+			}
+
+			/*
+			glGenRenderbuffers(1, &framebuffers[i].rbo);
+			glBindRenderbuffer(GL_RENDERBUFFER, framebuffers[i].rbo);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, framebuffers[i].rbo);
+			*/
+
+			glGenTextures(1, &framebuffers[i].stencilID);
+			glBindTexture(GL_TEXTURE_2D, framebuffers[i].stencilID);
+			//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_UNSIGNED_INT_24_8, GL_FLOAT, 0);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, 0);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, framebuffers[i].stencilID, 0);
+
+
+			glGenTextures(1, &framebuffers[i].stencilTextureID);
+			glBindTexture(GL_TEXTURE_2D, framebuffers[i].stencilTextureID);
+
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, width, height, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, framebuffers[i].stencilTextureID, 0);
+
+
+
+			GLenum DrawBuffers[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+			glDrawBuffers(3, DrawBuffers);
+
+		}
 		else if (i == OFF_SCREEN_COLOR_BUFFER)
+		{
+			glGenTextures(1, &framebuffers[i].textureIDs[0]);
+			glBindTexture(GL_TEXTURE_2D, framebuffers[i].textureIDs[0]);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebuffers[i].textureIDs[0], 0);
+
+			/*
+			glGenRenderbuffers(1, &framebuffers[i].rbo);
+			glBindRenderbuffer(GL_RENDERBUFFER, framebuffers[i].rbo);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, framebuffers[i].rbo);
+			*/
+
+			glGenTextures(1, &framebuffers[i].stencilID);
+			glBindTexture(GL_TEXTURE_2D, framebuffers[i].stencilID);
+			//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_UNSIGNED_INT_24_8, GL_FLOAT, 0);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, 0);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, framebuffers[i].stencilID, 0);
+
+			GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+			glDrawBuffers(1, DrawBuffers);
+		}
+		else if (i == OFF_SCREEN_COLOR_BUFFER_CHARACTERS)
 		{
 			glGenTextures(1, &framebuffers[i].textureIDs[0]);
 			glBindTexture(GL_TEXTURE_2D, framebuffers[i].textureIDs[0]);
@@ -382,7 +483,27 @@ InitializeOffScreenBuffer(float width, float height)
 			GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
 			glDrawBuffers(1, DrawBuffers);
 		}
+		else if (i == FINAL_RENDER_BUFFER)
+		{
 
+			glGenTextures(1, &framebuffers[i].textureIDs[0]);
+			glBindTexture(GL_TEXTURE_2D, framebuffers[i].textureIDs[0]);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebuffers[i].textureIDs[0], 0);
+
+			GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+			glDrawBuffers(1, DrawBuffers);
+		}
 
 
 
@@ -446,6 +567,14 @@ InitializeRendererData(const mat4x4& projectionMatrix, float width, float height
 	setUniform1iv(&shaders[FORWARD_SHADER], "textureArray[0]", texIDS, 16);
 	Unbind(&shaders[FORWARD_SHADER]);
 
+	//Set shaders
+	Bind(&shaders[FORWARD_SHADER_CHARACTERS]);
+	setUniformMatrix4fv(&shaders[FORWARD_SHADER_CHARACTERS], "projectionMatrix", 1, GL_FALSE, projectionMatrix);
+	//GLint texIDS[] = { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 };
+	setUniform1iv(&shaders[FORWARD_SHADER_CHARACTERS], "textureArray[0]", texIDS, 16);
+	setUniform1i(&shaders[FORWARD_SHADER_CHARACTERS], "stencilTexturinoChar", 15); //Note this means that we cant render more than 14 textures for the characters which means we need to save as much as possible in textures
+	Unbind(&shaders[FORWARD_SHADER_CHARACTERS]);
+
 
 	Bind(&shaders[SHADOW_SHADER]);
 	setUniformMatrix4fv(&shaders[SHADOW_SHADER], "projectionMatrix", 1, GL_FALSE, projectionMatrix);
@@ -453,6 +582,13 @@ InitializeRendererData(const mat4x4& projectionMatrix, float width, float height
 	setUniform1i(&shaders[SHADOW_SHADER], "stencilTexturino", 4);
 	setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestricted", 0);
 	Unbind(&shaders[SHADOW_SHADER]);
+
+	Bind(&shaders[SHADOW_SHADER_CHARACTERS]);
+	setUniformMatrix4fv(&shaders[SHADOW_SHADER_CHARACTERS], "projectionMatrix", 1, GL_FALSE, projectionMatrix);
+	setUniform1f(&shaders[SHADOW_SHADER_CHARACTERS], "lightZPosition", 30.0f);
+	setUniform1i(&shaders[SHADOW_SHADER_CHARACTERS], "stencilTexturino", 4);
+	setUniform1i(&shaders[SHADOW_SHADER_CHARACTERS], "shouldLightBeRestricted", 0);
+	Unbind(&shaders[SHADOW_SHADER_CHARACTERS]);
 
 	Bind(&shaders[STENCIL_SHADER]);
 	setUniformMatrix4fv(&shaders[STENCIL_SHADER], "projectionMatrix", 1, GL_FALSE, projectionMatrix);
@@ -465,7 +601,20 @@ InitializeRendererData(const mat4x4& projectionMatrix, float width, float height
 	setUniform1i(&shaders[QUAD_SHADER], "shadowTexture", 1);
 	setUniform1i(&shaders[QUAD_SHADER], "stencilTexture1", 2);
 	setUniform1i(&shaders[QUAD_SHADER], "stencilTexture2", 3);
+	setUniform1i(&shaders[QUAD_SHADER], "colorTextureCharacters", 4);
+	setUniform1i(&shaders[QUAD_SHADER], "stencilTextureCharacters", 5);
+	setUniform1i(&shaders[QUAD_SHADER], "shadowTextureCharacters", 6);
 	Unbind(&shaders[QUAD_SHADER]);
+
+	Bind(&shaders[FINAL_PASS1_SHADER]);
+	setUniform1i(&shaders[FINAL_PASS1_SHADER], "colorTexture", 0);
+	setUniform1i(&shaders[FINAL_PASS1_SHADER], "shadowTexture", 1);
+	setUniform1i(&shaders[FINAL_PASS1_SHADER], "stencilTexture1", 2);
+	setUniform1i(&shaders[FINAL_PASS1_SHADER], "stencilTexture2", 3);
+	setUniform1i(&shaders[FINAL_PASS1_SHADER], "colorTextureCharacters", 4);
+	setUniform1i(&shaders[FINAL_PASS1_SHADER], "stencilTextureCharacters", 5);
+	setUniform1i(&shaders[FINAL_PASS1_SHADER], "shadowTextureCharacters", 6);
+	Unbind(&shaders[FINAL_PASS1_SHADER]);
 
 	InitializeOffScreenBuffer(width, height);
 	InitializeNDCQuad();
@@ -1699,6 +1848,11 @@ RenderLevel(Level* level, Window window)
 	level->player.light->direction = Normalize(level->cursorPos - level->player.light->position);
 	level->player.light->direction = level->shadowDirectionToCursor;
 
+
+
+	/**********************
+	***********************
+	**********************/
 	//Draw the texture that shapes the shadowing
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[OFF_SCREEN_STENCIL_BUFFER].fbo);
 	glViewport(0, 0, window.width, window.height);
@@ -1722,6 +1876,15 @@ RenderLevel(Level* level, Window window)
 	Flush();
 	glBindTexture(GL_TEXTURE_2D, 0);
 	Unbind(&shaders[STENCIL_SHADER]);
+	/**********************
+	***********************
+	***********************/
+
+
+
+
+
+
 
 	//Start doing all the regular rendering
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[OFF_SCREEN_COLOR_BUFFER].fbo);
@@ -1754,11 +1917,11 @@ RenderLevel(Level* level, Window window)
 	PopTransform();
 
 	//player
-	PushTransform(level->player.camera.position, -4.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+	/*PushTransform(level->player.camera.position, -4.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
 	//DrawQuad(level->player.position, V2(132.0f, 132.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), textures[PLAYER_RUN].ID, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
 	//DrawQuad(level->player.position, V2(32.0f, 32.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
 	DrawQuadAnim(level->player.position, V2(80.0f, 87.0f), &level->player.animation);
-	PopTransform();
+	PopTransform();*/
 
 
 	//Pathstack
@@ -1772,7 +1935,7 @@ RenderLevel(Level* level, Window window)
 	}
 	PopTransform();
 #endif
-	//Ai
+	/*//Ai
 	PushTransform(level->player.camera.position, -1.5f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
 	for (unsigned int i = 0; i < level->ais.currentNumberOfAis; i++)
 	{
@@ -1786,7 +1949,7 @@ RenderLevel(Level* level, Window window)
 	{
 		DrawQuad(level->projectiles.projectiles[i].position, V2(level->projectiles.projectiles[i].AABB.x *2.0f, level->projectiles.projectiles[i].AABB.y *2.0f), GetColor(V4(1.0f, 1.0f, 0.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
 	}
-	PopTransform();
+	PopTransform();*/
 
 	//Doors
 	PushTransform(level->player.camera.position, -1.5f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
@@ -1820,6 +1983,14 @@ RenderLevel(Level* level, Window window)
 	}
 	PopTransform();
 
+	PushTransform(level->player.camera.position, -1.5f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+	for (unsigned int i = 0; i < level->lights.numberOfActiveLights - 1; i++)
+	{
+		DrawQuad(level->lights.lights[i].position, V2(150.0f, 150.0f), GetColor(V4(level->lights.lights[i].color.x, level->lights.lights[i].color.y, level->lights.lights[i].color.z, 1.0f)), textures[LENS_FLARE].ID, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+		//DrawQuad(level->lights.lights[i].position, V2(150.0f, 150.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), textures[LENS_FLARE].ID, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+	}
+	PopTransform();
+
 	End();
 	Flush();
 	Unbind(&shaders[FORWARD_SHADER]);
@@ -1828,6 +1999,54 @@ RenderLevel(Level* level, Window window)
 
 
 
+
+	//render all the characters
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[OFF_SCREEN_COLOR_BUFFER_CHARACTERS].fbo);
+	glViewport(0, 0, window.width, window.height);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glActiveTexture(GL_TEXTURE15);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_STENCIL_BUFFER].stencilTextureID);
+
+	// Do OpenGL rendering here
+	Bind(&shaders[FORWARD_SHADER_CHARACTERS]);
+	Begin(&renderers[COLOR_RENDERER]);
+
+	//player
+	PushTransform(level->player.camera.position, -4.0f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+	//DrawQuad(level->player.position, V2(132.0f, 132.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), textures[PLAYER_RUN].ID, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+	//DrawQuad(level->player.position, V2(32.0f, 32.0f), GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+	DrawQuadAnim(level->player.position, V2(80.0f, 87.0f), &level->player.animation);
+	PopTransform();
+
+	//Ai
+	PushTransform(level->player.camera.position, -1.5f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+	for (unsigned int i = 0; i < level->ais.currentNumberOfAis; i++)
+	{
+		DrawQuad(level->ais.ais[i].position, V2(Game::tileFullWidth.x - 2.0f, Game::tileFullWidth.y - 2.0f), level->ais.ais[i].state == Ai::State::DEAD ? GetColor(V4(1.0f, 0.0f, 0.0f, 1.0f)) : GetColor(V4(1.0f, 1.0f, 1.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+	}
+	PopTransform();
+
+	//projectiles
+	PushTransform(level->player.camera.position, -1.4f, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+	for (unsigned int i = 0; i < level->projectiles.currentActiveProjectiles; i++)
+	{
+		DrawQuad(level->projectiles.projectiles[i].position, V2(level->projectiles.projectiles[i].AABB.x *2.0f, level->projectiles.projectiles[i].AABB.y *2.0f), GetColor(V4(1.0f, 1.0f, 0.0f, 1.0f)), -1, V2(0.0f, 0.0f), V2(1.0f, 1.0f));
+	}
+	PopTransform();
+
+	End();
+	Flush();
+	Unbind(&shaders[FORWARD_SHADER_CHARACTERS]);
+
+
+
+
+
+	///SHADOWS
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[OFF_SCREEN_SHADOW_BUFFER].fbo);
 	glViewport(0, 0, window.width, window.height);
 	//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -1870,7 +2089,7 @@ RenderLevel(Level* level, Window window)
 
 	//Draw all lights
 	float depthOffset = -2.0f;
-	for (unsigned int k = 0; k < level->lights.numberOfActiveLights; k++)
+	for (unsigned int k = 0; k < level->lights.numberOfActiveLights - 1; k++)
 	{
 
 		Bind(&shaders[SHADOW_SHADER]);
@@ -1886,7 +2105,7 @@ RenderLevel(Level* level, Window window)
 		if (level->lights.lights[k].type == Light::POINT)
 		{
 			//this should be set by the light itself
-			k == level->lights.numberOfActiveLights - 1 ? setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestricted", 0) : setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestricted", 0);
+			k == level->lights.numberOfActiveLights - 1 ? setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestricted", 1) : setUniform1i(&shaders[SHADOW_SHADER], "shouldLightBeRestricted", 0);
 			PushTransform(level->player.camera.position, depthOffset, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
 			depthOffset += 0.1f;
 			if (level->lights.lights[k].visibilityPolygonPoints.size() > 0)
@@ -1908,6 +2127,128 @@ RenderLevel(Level* level, Window window)
 		Flush();
 		Unbind(&shaders[SHADOW_SHADER]);
 	}
+
+
+
+
+
+
+
+
+
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[OFF_SCREEN_SHADOW_BUFFER_CHARACTERS].fbo);
+	glViewport(0, 0, window.width, window.height);
+	//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_STENCIL_BUFFER].stencilTextureID);
+
+
+
+	//Draw all lights
+	depthOffset = -2.0f;
+
+	Bind(&shaders[SHADOW_SHADER_CHARACTERS]);
+	Begin(&renderers[SHADOW_RENDERER]);
+
+	setUniform2f(&shaders[SHADOW_SHADER_CHARACTERS], "pos", level->lights.lights[level->lights.numberOfActiveLights - 1].position + V2(-Game::tileHalfWidth.x, Game::tileHalfWidth.y) - level->player.position);
+	setUniform3f(&shaders[SHADOW_SHADER_CHARACTERS], "color1", level->lights.lights[level->lights.numberOfActiveLights - 1].color);
+	setUniform1i(&shaders[SHADOW_SHADER_CHARACTERS], "currentActiveOutput", 0);
+	setUniform1f(&shaders[SHADOW_SHADER_CHARACTERS], "lightZPosition", level->lights.lights[level->lights.numberOfActiveLights - 1].lightZPos);
+
+
+	if (level->lights.lights[level->lights.numberOfActiveLights - 1].type == Light::POINT)
+	{
+		//this should be set by the light itself
+		setUniform1i(&shaders[SHADOW_SHADER_CHARACTERS], "shouldLightBeRestricted", 1);
+		PushTransform(level->player.camera.position, depthOffset, V2(CosRadians(DegreesToRadians(0)), SinRadians(DegreesToRadians(0))));
+		depthOffset += 0.1f;
+		if (level->lights.lights[level->lights.numberOfActiveLights - 1].visibilityPolygonPoints.size() > 0)
+		{
+			for (int i = 0; i < level->lights.lights[level->lights.numberOfActiveLights - 1].visibilityPolygonPoints.size() - 1; i++)
+			{
+
+				DrawTriangle(V2(level->lights.lights[level->lights.numberOfActiveLights - 1].position.x - Game::tileHalfWidth.x, level->lights.lights[level->lights.numberOfActiveLights - 1].position.y + Game::tileHalfWidth.y), V2(level->lights.lights[level->lights.numberOfActiveLights - 1].visibilityPolygonPoints[i].y - Game::tileHalfWidth.x, -level->lights.lights[level->lights.numberOfActiveLights - 1].visibilityPolygonPoints[i].z + Game::tileHalfWidth.y), V2(level->lights.lights[level->lights.numberOfActiveLights - 1].visibilityPolygonPoints[i + 1].y - Game::tileHalfWidth.x, -level->lights.lights[level->lights.numberOfActiveLights - 1].visibilityPolygonPoints[i + 1].z + Game::tileHalfWidth.x), GetColor(0.5f, 0.5f, 0.5f, 1.0f));
+
+			}
+		}
+
+
+		DrawTriangle(V2(level->lights.lights[level->lights.numberOfActiveLights - 1].position.x - Game::tileHalfWidth.x, level->lights.lights[level->lights.numberOfActiveLights - 1].position.y + Game::tileHalfWidth.x), V2(level->lights.lights[level->lights.numberOfActiveLights - 1].visibilityPolygonPoints[level->lights.lights[level->lights.numberOfActiveLights - 1].visibilityPolygonPoints.size() - 1].y - Game::tileHalfWidth.x, -level->lights.lights[level->lights.numberOfActiveLights - 1].visibilityPolygonPoints[level->lights.lights[level->lights.numberOfActiveLights - 1].visibilityPolygonPoints.size() - 1].z + Game::tileHalfWidth.x), V2(level->lights.lights[level->lights.numberOfActiveLights - 1].visibilityPolygonPoints[0].y - Game::tileHalfWidth.x, -level->lights.lights[level->lights.numberOfActiveLights - 1].visibilityPolygonPoints[0].z + Game::tileHalfWidth.x), GetColor(0.5f, 1.0f, 0.5f, 1.0f));
+
+		PopTransform();
+	}
+	End();
+	Flush();
+	Unbind(&shaders[SHADOW_SHADER_CHARACTERS]);
+	
+
+
+
+
+
+	//Begin post processing stages
+	//Draw the final combined image to the screen
+	Bind(&shaders[FINAL_PASS1_SHADER]);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[FINAL_RENDER_BUFFER].fbo);
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, window.width, window.height);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+
+	glBindVertexArray(ndcQuads[REGULAR_PASS].vao);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_COLOR_BUFFER].textureIDs[0]);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_SHADOW_BUFFER].textureIDs[0]);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_SHADOW_BUFFER].stencilTextureID);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_STENCIL_BUFFER].stencilTextureID);
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_COLOR_BUFFER_CHARACTERS].textureIDs[0]);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_SHADOW_BUFFER_CHARACTERS].stencilTextureID);
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_SHADOW_BUFFER_CHARACTERS].textureIDs[0]);
+
+	//setUniform1i(&shaders[QUAD_SHADER], "shouldLightBeRestricted", 0);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindVertexArray(0);
+
+	//setUniform1i(&shaders[QUAD_SHADER], "shouldLightBeRestricted", 0);
+
+	glEnable(GL_DEPTH_TEST);
+	Unbind(&shaders[FINAL_PASS1_SHADER]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	//glBindTexture(GL_TEXTURE_2D, 0);
 
 	//Draw the final combined image to the screen
@@ -1929,15 +2270,21 @@ RenderLevel(Level* level, Window window)
 	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_SHADOW_BUFFER].stencilTextureID);
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_STENCIL_BUFFER].stencilTextureID);
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_COLOR_BUFFER_CHARACTERS].textureIDs[0]);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_SHADOW_BUFFER_CHARACTERS].stencilTextureID);
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[OFF_SCREEN_SHADOW_BUFFER_CHARACTERS].textureIDs[0]);
 
-	setUniform1i(&shaders[QUAD_SHADER], "shouldLightBeRestricted", 0);
+	//setUniform1i(&shaders[QUAD_SHADER], "shouldLightBeRestricted", 0);
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
 
-	setUniform1i(&shaders[QUAD_SHADER], "shouldLightBeRestricted", 0);
+	//setUniform1i(&shaders[QUAD_SHADER], "shouldLightBeRestricted", 0);
 
 	glEnable(GL_DEPTH_TEST);
 	Unbind(&shaders[QUAD_SHADER]);

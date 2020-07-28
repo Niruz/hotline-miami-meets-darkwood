@@ -59,14 +59,11 @@ void main()
 	if (shouldLightBeRestricted == 1)
 	{
 		colorTest = colorTest * stencil1;
-		//if (colorTest.x + colorTest.y + colorTest.z > 0.0f)
-		//	stencil = 1;
-		//stencil = 1;
+		//stencil = 1 * stencil1;
 	}
 	colorOut0 = vec4(colorTest, 1.0f);
 	//colorOut0 = vec4(stencil1, stencil1, stencil1, 1.0f);
-	//stencil = 1 * stencil1;
-	stencil = 1;
+	stencil = 1 * stencil1;
 
 
 }

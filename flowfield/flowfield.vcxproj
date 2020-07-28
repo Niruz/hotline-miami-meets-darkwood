@@ -122,6 +122,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="Shaders\finalFragment.glsl" />
+    <None Include="Shaders\finalVertex.glsl" />
+    <None Include="Shaders\forwardVertex2.glsl" />
+    <None Include="Shaders\fragmentVertex2.glsl" />
+    <None Include="Shaders\shadowfragment2.glsl" />
+    <None Include="Shaders\shadowvertex2.glsl" />
     <None Include="Tiled.cpp" />
     <None Include="Physics.cpp" />
     <None Include="GameGlobals.cpp" />
